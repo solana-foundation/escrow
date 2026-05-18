@@ -27,7 +27,7 @@ export function CreateEscrow() {
         const escrowSeed = await generateKeyPairSigner();
         setGeneratedSeed(escrowSeed.address);
         const [escrow] = await findEscrowPda(
-            { escrowSeed: escrowSeed.address as Address },
+            { escrowSeed: escrowSeed.address },
             { programAddress: programId as Address },
         );
         setGeneratedEscrow(escrow);
