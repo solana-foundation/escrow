@@ -20,7 +20,7 @@
     "@solana/kit-plugins": "^0.3.0"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0",
+    "@types/node": "^25.6.2",
     "tsx": "^4.20.5",
     "typescript": "^5.9.3"
   }
