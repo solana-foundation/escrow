@@ -4,6 +4,7 @@
       "accounts": [],
       "definedTypes": [],
       "errors": [],
+      "events": [],
       "instructions": [],
       "kind": "programNode",
       "name": "associatedToken",
@@ -787,6 +788,7 @@
         "name": "escrowImmutable"
       }
     ],
+    "events": [],
     "instructions": [
       {
         "accounts": [
