@@ -2401,9 +2401,9 @@ checksum = "6373607a59f0be73a39b6fe456b8192fcc3585f602af20751600e974dd455e77"
 
 [[package]]
 name = "litesvm"
-version = "0.9.0"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ac45cefd507a490cc5b8f729b8cc7f21814a8879e7663f348e56311eef248ad"
+checksum = "347d8c652d592c618ac996f2ab21f8c0b0f2da3fbbca227a6887ee61bb75f2de"
 dependencies = [
  "agave-feature-set",
  "agave-reserved-account-keys",
@@ -2415,6 +2415,7 @@ dependencies = [
  "log",
  "serde",
  "solana-account",
+ "solana-address 2.2.0",
  "solana-address-lookup-table-interface",
  "solana-bpf-loader-program",
  "solana-builtins",
@@ -2423,6 +2424,7 @@ dependencies = [
  "solana-compute-budget-instruction",
  "solana-epoch-rewards",
  "solana-epoch-schedule",
+ "solana-feature-gate-interface",
  "solana-fee",
  "solana-fee-structure",
  "solana-hash 3.1.0",
@@ -2439,7 +2441,6 @@ dependencies = [
  "solana-precompile-error",
  "solana-program-error",
  "solana-program-runtime",
- "solana-pubkey 3.0.0",
  "solana-rent 3.0.0",
  "solana-sdk-ids",
  "solana-sha256-hasher",
@@ -4366,11 +4367,17 @@ version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "75ca9b5cbb6f500f7fd73db5bd95640f71a83f04d6121a0e59a43b202dca2731"
 dependencies = [
+ "bincode",
  "serde",
  "serde_derive",
+ "solana-account",
+ "solana-account-info",
+ "solana-instruction",
  "solana-program-error",
  "solana-pubkey 4.1.0",
+ "solana-rent 4.0.0",
  "solana-sdk-ids",
+ "solana-system-interface 3.0.0",
 ]
 
 [[package]]
@@ -5623,7 +5630,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "14591d6508042ebefb110305d3ba761615927146a26917ade45dc332d8e1ecde"
 dependencies = [
  "num-traits",
+ "serde",
+ "serde_derive",
  "solana-address 2.2.0",
+ "solana-instruction",
  "solana-msg",
  "solana-program-error",
 ]
