@@ -12,16 +12,16 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@solana-program/compute-budget": "^0.13.0",
-    "@solana-program/system": "^0.11.0",
-    "@solana-program/token": "^0.10.0",
+    "@solana-program/compute-budget": "^0.15.0",
+    "@solana-program/system": "^0.12.0",
+    "@solana-program/token": "^0.13.0",
     "@solana/escrow-program-client": "workspace:*",
-    "@solana/kit": "^6.0.1",
-    "@solana/kit-plugins": "^0.3.0"
+    "@solana/kit": "^6.9.0",
+    "@solana/kit-plugins": "^0.11.1"
   },
   "devDependencies": {
     "@types/node": "^25.6.2",
-    "tsx": "^4.20.5",
+    "tsx": "^4.21.1",
     "typescript": "^5.9.3"
   }
 }

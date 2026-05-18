@@ -12,32 +12,32 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
-    "@base-ui/react": "^1.1.0",
+    "@base-ui/react": "^1.4.1",
     "@solana-program/system": "^0.12.0",
-    "@solana-program/token": "^0.12.0",
+    "@solana-program/token": "^0.13.0",
     "@solana-program/token-2022": "^0.9.0",
-    "@solana/design-system": "^1.0.0",
+    "@solana/design-system": "^1.0.1",
     "@solana/escrow-program-client": "workspace:*",
-    "@solana/kit": "^6.3.1",
+    "@solana/kit": "^6.9.0",
     "@solana/wallet-adapter-react": "^0.15.39",
     "@solana/wallet-adapter-react-ui": "^0.9.39",
-    "@solana/wallet-adapter-wallets": "^0.19.37",
+    "@solana/wallet-adapter-wallets": "^0.19.38",
     "@solana/web3.js": "^1.98.4",
     "@vercel/analytics": "^2.0.1",
     "clsx": "^2.1.1",
-    "motion": "^12.26.0",
+    "motion": "^12.38.0",
     "next": "^16.2.6",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
   },
   "devDependencies": {
-    "@playwright/test": "^1.50.0",
-    "@tailwindcss/postcss": "^4.2.1",
+    "@playwright/test": "^1.59.1",
+    "@tailwindcss/postcss": "^4.3.0",
     "@types/node": "^25.6.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "dotenv": "^17.4.2",
-    "tailwindcss": "^4.2.1",
+    "tailwindcss": "^4.3.0",
     "typescript": "^5.9.3"
   }
 }

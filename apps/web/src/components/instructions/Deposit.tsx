@@ -48,7 +48,7 @@ export function Deposit() {
                 escrow: escrow as Address,
                 depositor: signerAddress,
                 mint: mint as Address,
-                receiptSeed: receiptSeed.address as Address,
+                receiptSeed: receiptSeed.address,
             },
             { programAddress: programId as Address },
         );

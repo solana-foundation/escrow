@@ -41,7 +41,7 @@ function normalizeValues(values?: RecentTransactionValues): RecentTransactionVal
         .map(([key, value]) => [key, value?.trim() ?? ''] as const)
         .filter(([, value]) => value.length > 0);
     if (normalizedEntries.length === 0) return undefined;
-    return Object.fromEntries(normalizedEntries) as RecentTransactionValues;
+    return Object.fromEntries(normalizedEntries);
 }
 
 function readStoredTransactions(): RecentTransaction[] {
