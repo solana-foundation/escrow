@@ -34,7 +34,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: '1.92'
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6.0.7
       - uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'
