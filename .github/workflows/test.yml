@@ -8,7 +8,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  SOLANA_VERSION: 2.2.19
+  SOLANA_VERSION: 4.0.0
 
 jobs:
   unit-tests:
