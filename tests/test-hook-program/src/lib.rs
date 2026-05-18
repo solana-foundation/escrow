@@ -15,7 +15,7 @@ pinocchio::default_allocator!();
 pinocchio::nostd_panic_handler!();
 
 #[cfg(feature = "allow")]
-pub fn process_instruction(_program_id: &Address, accounts: &[AccountView], instruction_data: &[u8]) -> ProgramResult {
+pub fn process_instruction(_program_id: &Address, accounts: &mut [AccountView], instruction_data: &[u8]) -> ProgramResult {
     use pinocchio::error::ProgramError;
 
     // Validate core context shape so integration tests catch missing account context.
@@ -41,7 +41,7 @@ pub fn process_instruction(_program_id: &Address, accounts: &[AccountView], inst
 #[cfg(feature = "deny")]
 pub fn process_instruction(
     _program_id: &Address,
-    _accounts: &[AccountView],
+    _accounts: &mut [AccountView],
     _instruction_data: &[u8],
 ) -> ProgramResult {
     use pinocchio::error::ProgramError;
@@ -51,7 +51,7 @@ pub fn process_instruction(
 #[cfg(not(any(feature = "allow", feature = "deny")))]
 pub fn process_instruction(
     _program_id: &Address,
-    _accounts: &[AccountView],
+    _accounts: &mut [AccountView],
     _instruction_data: &[u8],
 ) -> ProgramResult {
     Ok(())

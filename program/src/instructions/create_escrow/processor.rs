@@ -30,7 +30,8 @@ pub fn process_create_escrow(program_id: &Address, accounts: &[AccountView], ins
     create_pda_account(ix.accounts.payer, Escrow::LEN, program_id, ix.accounts.escrow, escrow_seeds_array)?;
 
     // Write serialized Escrow data to the account
-    let mut escrow_data_slice = ix.accounts.escrow.try_borrow_mut()?;
+    let mut escrow_account = *ix.accounts.escrow;
+    let mut escrow_data_slice = escrow_account.try_borrow_mut()?;
     escrow.write_to_slice(&mut escrow_data_slice)?;
 
     // Emit event via CPI

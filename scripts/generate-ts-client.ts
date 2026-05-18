@@ -21,7 +21,7 @@ const escrowCodama = createEscrowCodamaBuilder(escrowIdl).appendAccountVersion()
 const configPreserver = preserveConfigFiles(typescriptClientsDir);
 
 void escrowCodama.accept(
-    renderJavaScriptVisitor(path.join(typescriptClientsDir, 'src', 'generated'), {
+    renderJavaScriptVisitor(typescriptClientsDir, {
         deleteFolderBeforeRendering: true,
         formatCode: true,
     }),

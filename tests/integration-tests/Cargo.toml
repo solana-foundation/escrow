@@ -13,7 +13,7 @@ escrow-program-client = { path = "../../clients/rust", features = [
 ], default-features = false }
 solana-sdk = "3.0.0"
 solana-program = "4.0.0"
-solana-account = "~3.2"
+solana-account = "~3.4"
 spl-token-interface = "2.0.0"
 spl-associated-token-account = { version = "8.0.0", features = [
     "no-entrypoint",

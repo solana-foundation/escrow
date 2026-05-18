@@ -68,7 +68,8 @@ pub fn process_deposit(program_id: &Address, accounts: &[AccountView], instructi
     create_pda_account(ix.accounts.payer, Receipt::LEN, program_id, ix.accounts.receipt, receipt_seeds_array)?;
 
     // Write serialized receipt data to the account
-    let mut receipt_data_slice = ix.accounts.receipt.try_borrow_mut()?;
+    let mut receipt_account = *ix.accounts.receipt;
+    let mut receipt_data_slice = receipt_account.try_borrow_mut()?;
     receipt.write_to_slice(&mut receipt_data_slice)?;
     drop(receipt_data_slice);
 

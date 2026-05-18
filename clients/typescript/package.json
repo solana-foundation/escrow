@@ -1,28 +1,31 @@
 {
-  "name": "@solana/escrow-program-client",
-  "version": "0.0.1",
-  "description": "TypeScript client for Escrow Program",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/solana-program/escrow"
-  },
-  "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+    "name": "@solana/escrow-program-client",
+    "version": "0.0.1",
+    "description": "TypeScript client for Escrow Program",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/solana-program/escrow"
+    },
+    "type": "module",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "import": "./dist/index.js",
+            "types": "./dist/index.d.ts"
+        }
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "tsc"
+    },
+    "peerDependencies": {
+        "@solana/kit": "^6.4.0"
+    },
+    "dependencies": {
+        "@solana/program-client-core": "^6.4.0"
     }
-  },
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "build": "tsc"
-  },
-  "peerDependencies": {
-    "@solana/kit": "^6.0.0"
-  }
 }
