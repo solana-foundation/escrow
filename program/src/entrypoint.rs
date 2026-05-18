@@ -12,7 +12,11 @@ use crate::{
 
 entrypoint!(process_instruction);
 
-pub fn process_instruction(program_id: &Address, accounts: &[AccountView], instruction_data: &[u8]) -> ProgramResult {
+pub fn process_instruction(
+    program_id: &Address,
+    accounts: &mut [AccountView],
+    instruction_data: &[u8],
+) -> ProgramResult {
     let (discriminator, instruction_data) =
         instruction_data.split_first().ok_or(ProgramError::InvalidInstructionData)?;
 

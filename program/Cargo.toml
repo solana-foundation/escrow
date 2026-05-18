@@ -17,7 +17,7 @@ devnet = []
 [dependencies]
 codama = { workspace = true }
 const-crypto = { workspace = true }
-pinocchio = { workspace = true, features = ["cpi"] }
+pinocchio = { workspace = true, features = ["account-resize", "cpi"] }
 pinocchio-associated-token-account = { workspace = true }
 pinocchio-log = { workspace = true }
 pinocchio-system = { workspace = true }

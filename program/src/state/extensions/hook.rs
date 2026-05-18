@@ -86,7 +86,7 @@ impl HookData {
         };
 
         // Preserve a stable escrow error surface for all hook CPI failures.
-        invoke_with_bounds::<16>(&instruction, &all_accounts).map_err(|_| EscrowProgramError::HookRejected.into())
+        invoke_with_bounds::<16, _>(&instruction, &all_accounts).map_err(|_| EscrowProgramError::HookRejected.into())
     }
 }
 

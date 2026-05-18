@@ -2,12 +2,14 @@ use pinocchio::{account::AccountView, address::Address, error::ProgramError};
 use pinocchio::{
     cpi::{Seed, Signer},
     sysvars::{rent::Rent, Sysvar},
-    ProgramResult,
+    ProgramResult, Resize,
 };
 use pinocchio_system::instructions::{Allocate, Assign, CreateAccount, Transfer};
 
 /// Close a PDA account and return the lamports to the recipient.
 pub fn close_pda_account(pda_account: &AccountView, recipient: &AccountView) -> ProgramResult {
+    let mut pda_account = *pda_account;
+    let mut recipient = *recipient;
     let payer_lamports = recipient.lamports();
     recipient.set_lamports(payer_lamports.checked_add(pda_account.lamports()).ok_or(ProgramError::ArithmeticOverflow)?);
     pda_account.set_lamports(0);
@@ -87,7 +89,7 @@ pub fn create_pda_account_idempotent<const N: usize>(
                 if additional_lamports > 0 {
                     Transfer { from: payer, to: pda_account, lamports: additional_lamports }.invoke()?;
                 }
-                // Resize the account
+                let mut pda_account = *pda_account;
                 pda_account.resize(space)?;
             }
             // If space <= current_len, no action needed (data already fits)
@@ -124,6 +126,7 @@ pub fn resize_pda_account(payer: &AccountView, pda_account: &AccountView, space:
     }
 
     if pda_account.data_len() != space {
+        let mut pda_account = *pda_account;
         pda_account.resize(space)?;
     }
 

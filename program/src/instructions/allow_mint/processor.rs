@@ -49,7 +49,8 @@ pub fn process_allow_mint(program_id: &Address, accounts: &[AccountView], instru
     let allowed_mint = AllowedMint::new(ix.data.bump);
 
     // Write serialized AllowedMint data to the account
-    let mut allowed_mint_data_slice = ix.accounts.allowed_mint.try_borrow_mut()?;
+    let mut allowed_mint_account = *ix.accounts.allowed_mint;
+    let mut allowed_mint_data_slice = allowed_mint_account.try_borrow_mut()?;
     allowed_mint.write_to_slice(&mut allowed_mint_data_slice)?;
     drop(allowed_mint_data_slice);
 

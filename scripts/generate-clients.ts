@@ -19,21 +19,19 @@ const typescriptClientsDir = path.join(__dirname, '..', 'clients', 'typescript')
 
 const escrowCodama = createEscrowCodamaBuilder(escrowIdl).appendAccountVersion().build();
 
-// Preserve configuration files during generation
 const configPreserver = preserveConfigFiles(typescriptClientsDir, rustClientsDir);
 
 // Generate Rust client
 void escrowCodama.accept(
-    renderRustVisitor(path.join(rustClientsDir, 'src', 'generated'), {
-        crateFolder: rustClientsDir,
+    renderRustVisitor(rustClientsDir, {
         deleteFolderBeforeRendering: true,
-        formatCode: true,
+        formatCode: false,
     }),
 );
 
 // Generate TypeScript client
 void escrowCodama.accept(
-    renderJavaScriptVisitor(path.join(typescriptClientsDir, 'src', 'generated'), {
+    renderJavaScriptVisitor(typescriptClientsDir, {
         deleteFolderBeforeRendering: true,
         formatCode: true,
     }),

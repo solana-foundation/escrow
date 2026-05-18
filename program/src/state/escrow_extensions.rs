@@ -1,7 +1,7 @@
 use alloc::vec;
 use alloc::vec::Vec;
 use codama::CodamaAccount;
-use pinocchio::{account::AccountView, cpi::Seed, error::ProgramError, Address, ProgramResult};
+use pinocchio::{account::AccountView, cpi::Seed, error::ProgramError, Address, ProgramResult, Resize};
 
 use crate::state::extensions::TimelockData;
 use crate::traits::{AccountSerialize, Discriminator, EscrowAccountDiscriminators, PdaSeeds, Versioned};
@@ -175,6 +175,7 @@ pub fn append_extension<const N: usize>(
     create_pda_account_idempotent(payer, required_size, program_id, extensions, pda_signer_seeds)?;
 
     // 5. Write data
+    let mut extensions = *extensions;
     let mut data = extensions.try_borrow_mut()?;
     let new_header = EscrowExtensionsHeader::new(bump, extension_count + 1);
     let header_bytes = new_header.to_bytes();
@@ -248,6 +249,7 @@ pub fn update_extension(
     resize_pda_account(payer, extensions, required_size)?;
 
     // Write data
+    let mut extensions = *extensions;
     let mut data = extensions.try_borrow_mut()?;
     data[..EscrowExtensionsHeader::LEN].copy_from_slice(&header_bytes);
     data[EscrowExtensionsHeader::LEN..required_size].copy_from_slice(&new_tlv_data);
@@ -311,6 +313,7 @@ pub fn remove_extension(extensions: &AccountView, ext_type: ExtensionType) -> Pr
     let required_size = EscrowExtensionsHeader::LEN + new_tlv_data.len();
 
     // Shrink the account to reclaim unused data bytes.
+    let mut extensions = *extensions;
     extensions.resize(required_size)?;
 
     // Write updated header and TLV bytes.

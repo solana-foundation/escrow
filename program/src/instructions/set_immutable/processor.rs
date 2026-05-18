@@ -24,7 +24,8 @@ pub fn process_set_immutable(program_id: &Address, accounts: &[AccountView], ins
     };
 
     // Write updated escrow.
-    let mut escrow_data = ix.accounts.escrow.try_borrow_mut()?;
+    let mut escrow_account = *ix.accounts.escrow;
+    let mut escrow_data = escrow_account.try_borrow_mut()?;
     updated_escrow.write_to_slice(&mut escrow_data)?;
 
     // Emit event
