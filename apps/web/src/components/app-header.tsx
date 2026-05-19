@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 
 import { NAV_ITEMS, type NavItem } from './nav-items';
 import { ProgramBadge } from './ProgramBadge';
+import { SavedValuesMenu } from './SavedValuesMenu';
 import { WalletButton } from './solana/solana-provider';
 
 function ClusterButton() {
@@ -120,6 +121,7 @@ export function AppHeader() {
 
                 <div className="hidden items-center gap-2 md:flex">
                     <ProgramBadge />
+                    <SavedValuesMenu />
                     <WalletButton />
                     <ClusterButton />
                 </div>
@@ -148,6 +150,7 @@ export function AppHeader() {
                             <DropdownMenuSeparator />
                             <div className="flex flex-col gap-2 p-2">
                                 <ProgramBadge />
+                                <SavedValuesMenu />
                                 <WalletButton />
                             </div>
                         </DropdownMenuContent>
