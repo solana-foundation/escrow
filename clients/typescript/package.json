@@ -1,11 +1,12 @@
 {
-    "name": "@solana/escrow-program-client",
+    "name": "@solana/escrow",
     "version": "0.0.1",
     "description": "TypeScript client for Escrow Program",
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "https://github.com/solana-program/escrow"
+        "url": "git+https://github.com/solana-program/escrow.git",
+        "directory": "clients/typescript"
     },
     "type": "module",
     "main": "./dist/index.js",
@@ -23,8 +24,19 @@
         "build": "tsc"
     },
     "peerDependencies": {
-        "@solana/kit": "^6.4.0"
+        "@solana/kit": "^6.9.0"
     },
+    "homepage": "https://github.com/solana-program/escrow#readme",
+    "bugs": {
+        "url": "https://github.com/solana-program/escrow/issues"
+    },
+    "keywords": [
+        "solana",
+        "solana-kit",
+        "escrow",
+        "token-escrow",
+        "pinocchio"
+    ],
     "dependencies": {
         "@solana/program-client-core": "^6.4.0"
     }

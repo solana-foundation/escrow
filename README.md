@@ -1,7 +1,7 @@
 # Escrow Program
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Built with Pinocchio](https://img.shields.io/badge/Built%20with-Pinocchio-purple)](https://github.com/solana-program/pinocchio)
+[![Built with Pinocchio](https://img.shields.io/badge/Built%20with-Pinocchio-purple)](https://github.com/anza-xyz/pinocchio)
 [![Solana](https://img.shields.io/badge/Solana-Devnet-green)](https://solana.com)
 
 ## Program ID

@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "prebuild": "cd ../.. && pnpm tsx scripts/generate-ts-client.ts && pnpm --filter @solana/escrow-program-client build",
+    "prebuild": "cd ../.. && pnpm tsx scripts/generate-ts-client.ts && pnpm --filter @solana/escrow build",
     "build": "next build",
     "dev": "next dev",
     "start": "next start",
@@ -17,7 +17,7 @@
     "@solana-program/token": "^0.13.0",
     "@solana-program/token-2022": "^0.9.0",
     "@solana/design-system": "^1.0.1",
-    "@solana/escrow-program-client": "workspace:*",
+    "@solana/escrow": "workspace:*",
     "@solana/kit": "^6.9.0",
     "@solana/wallet-adapter-react": "^0.15.39",
     "@solana/wallet-adapter-react-ui": "^0.9.39",

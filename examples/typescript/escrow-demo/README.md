@@ -77,7 +77,7 @@ Note that we are using the `createDefaultLocalhostRpcClient` [plugin](https://gi
 Create a new escrow account with the admin keypair and the randomly generated escrow seed:
 
 ```typescript
-import { getCreatesEscrowInstructionAsync, findEscrowPda } from '@solana/escrow-program-client';
+import { getCreatesEscrowInstructionAsync, findEscrowPda } from '@solana/escrow';
 
 // Find the escrow PDA
 const [escrowPda, escrowBump] = await findEscrowPda({
@@ -131,7 +131,7 @@ const mintToIx = getMintToInstruction({
 Allow the mint for deposits into this escrow (we must include the admin keypair as a signer):
 
 ```typescript
-import { getAllowMintInstructionAsync } from '@solana/escrow-program-client';
+import { getAllowMintInstructionAsync } from '@solana/escrow';
 
 const allowMintIx = await getAllowMintInstructionAsync({
     admin,
@@ -151,7 +151,7 @@ This creates:
 Add a 2-second timelock extension. This will force that tokens are locked for at least 2 seconds before they can be withdrawn:
 
 ```typescript
-import { getAddTimelockInstructionAsync } from '@solana/escrow-program-client';
+import { getAddTimelockInstructionAsync } from '@solana/escrow';
 
 const addTimelockIx = await getAddTimelockInstructionAsync({
     admin,
@@ -168,7 +168,7 @@ For this demo, we will attempt to withdraw before the timelock expires to see th
 Deposit 100 tokens into the escrow:
 
 ```typescript
-import { getDepositInstructionAsync } from '@solana/escrow-program-client';
+import { getDepositInstructionAsync } from '@solana/escrow';
 
 const depositIx = await getDepositInstructionAsync({
     amount: CONFIG.DEPOSIT_AMOUNT,

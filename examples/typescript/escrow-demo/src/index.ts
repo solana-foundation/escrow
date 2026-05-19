@@ -24,7 +24,7 @@ import {
     getCreatesEscrowInstructionAsync,
     getDepositInstructionAsync,
     getWithdrawInstructionAsync,
-} from '@solana/escrow-program-client';
+} from '@solana/escrow';
 import { generateKeyPairSigner, isSolanaError } from '@solana/kit';
 import { createDefaultLocalhostRpcClient } from '@solana/kit-plugins';
 import {

@@ -1367,6 +1367,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "escrow"
+version = "0.0.1"
+dependencies = [
+ "borsh",
+ "num-derive",
+ "num-traits",
+ "solana-account",
+ "solana-account-info",
+ "solana-address 2.6.0",
+ "solana-cpi",
+ "solana-instruction",
+ "solana-program-error",
+ "solana-pubkey 4.2.0",
+ "solana-rpc-client",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "escrow-program"
 version = "0.0.1"
 dependencies = [
@@ -1381,24 +1399,6 @@ dependencies = [
  "serde_json",
  "solana-security-txt",
  "spl-token-2022",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "escrow-program-client"
-version = "0.0.1"
-dependencies = [
- "borsh",
- "num-derive",
- "num-traits",
- "solana-account",
- "solana-account-info",
- "solana-address 2.6.0",
- "solana-cpi",
- "solana-instruction",
- "solana-program-error",
- "solana-pubkey 4.2.0",
- "solana-rpc-client",
  "thiserror 2.0.18",
 ]
 
@@ -5736,7 +5736,7 @@ dependencies = [
 name = "tests-escrow-program"
 version = "0.0.1"
 dependencies = [
- "escrow-program-client",
+ "escrow",
  "litesvm",
  "solana-account",
  "solana-address 2.6.0",
