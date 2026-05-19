@@ -11,13 +11,27 @@ import { TxResult } from '@/components/TxResult';
 import { firstValidationError, validateAddress, validatePositiveInteger } from '@/lib/validation';
 import { FormField, SendButton } from './shared';
 
-export function AddTimelock() {
+interface AddTimelockProps {
+    hideKnownFields?: boolean;
+    initialEscrow?: string;
+    initialLockDuration?: string;
+    onSuccess?: () => void;
+    submitLabel?: string;
+}
+
+export function AddTimelock({
+    hideKnownFields = false,
+    initialEscrow = '',
+    initialLockDuration = '',
+    onSuccess,
+    submitLabel,
+}: AddTimelockProps = {}) {
     const { createSigner } = useWallet();
     const { send, sending, signature, error, reset } = useSendTx();
     const { defaultEscrow, rememberEscrow } = useSavedValues();
     const { programId } = useProgramContext();
-    const [escrow, setEscrow] = useState('');
-    const [lockDuration, setLockDuration] = useState('');
+    const [escrow, setEscrow] = useState(initialEscrow);
+    const [lockDuration, setLockDuration] = useState(initialLockDuration);
     const [formError, setFormError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -51,6 +65,7 @@ export function AddTimelock() {
         });
         if (txSignature) {
             rememberEscrow(escrow);
+            onSuccess?.();
         }
     };
 
@@ -61,15 +76,17 @@ export function AddTimelock() {
             }}
             style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
         >
-            <FormField
-                label="Escrow Address"
-                value={escrow}
-                onChange={setEscrow}
-                autoFillValue={defaultEscrow}
-                onAutoFill={setEscrow}
-                placeholder="Escrow PDA address"
-                required
-            />
+            {!hideKnownFields && (
+                <FormField
+                    label="Escrow Address"
+                    value={escrow}
+                    onChange={setEscrow}
+                    autoFillValue={defaultEscrow}
+                    onAutoFill={setEscrow}
+                    placeholder="Escrow PDA address"
+                    required
+                />
+            )}
             <FormField
                 label="Lock Duration (seconds)"
                 value={lockDuration}
@@ -78,7 +95,7 @@ export function AddTimelock() {
                 type="number"
                 required
             />
-            <SendButton sending={sending} />
+            <SendButton sending={sending} label={submitLabel} />
             <TxResult signature={signature} error={formError ?? error} />
         </form>
     );

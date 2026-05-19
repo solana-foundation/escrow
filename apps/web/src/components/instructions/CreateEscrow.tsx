@@ -10,7 +10,12 @@ import { useProgramContext } from '@/contexts/ProgramContext';
 import { TxResult } from '@/components/TxResult';
 import { FormField, SendButton } from './shared';
 
-export function CreateEscrow() {
+interface CreateEscrowProps {
+    onSuccess?: () => void;
+    submitLabel?: string;
+}
+
+export function CreateEscrow({ onSuccess, submitLabel }: CreateEscrowProps = {}) {
     const { account, createSigner } = useWallet();
     const { send, sending, signature, error, reset } = useSendTx();
     const { rememberEscrow } = useSavedValues();
@@ -46,6 +51,7 @@ export function CreateEscrow() {
         });
         if (txSignature) {
             rememberEscrow(escrow);
+            onSuccess?.();
         }
     };
 
@@ -82,7 +88,7 @@ export function CreateEscrow() {
                     hint="Saved as the default escrow when creation succeeds"
                 />
             )}
-            <SendButton sending={sending} />
+            <SendButton sending={sending} label={submitLabel} />
             <TxResult signature={signature} error={error} />
         </form>
     );

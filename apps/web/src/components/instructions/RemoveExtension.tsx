@@ -18,13 +18,27 @@ const EXTENSION_OPTIONS = [
     { label: 'Arbiter (3)', value: '3' },
 ];
 
-export function RemoveExtension() {
+interface RemoveExtensionProps {
+    hideKnownFields?: boolean;
+    initialEscrow?: string;
+    initialExtensionType?: string;
+    onSuccess?: () => void;
+    submitLabel?: string;
+}
+
+export function RemoveExtension({
+    hideKnownFields = false,
+    initialEscrow = '',
+    initialExtensionType = '0',
+    onSuccess,
+    submitLabel,
+}: RemoveExtensionProps = {}) {
     const { createSigner } = useWallet();
     const { send, sending, signature, error, reset } = useSendTx();
     const { defaultEscrow, rememberEscrow } = useSavedValues();
     const { programId } = useProgramContext();
-    const [escrow, setEscrow] = useState('');
-    const [extensionType, setExtensionType] = useState('0');
+    const [escrow, setEscrow] = useState(initialEscrow);
+    const [extensionType, setExtensionType] = useState(initialExtensionType);
     const [formError, setFormError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -55,6 +69,7 @@ export function RemoveExtension() {
         });
         if (txSignature) {
             rememberEscrow(escrow);
+            onSuccess?.();
         }
     };
 
@@ -65,15 +80,17 @@ export function RemoveExtension() {
             }}
             style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
         >
-            <FormField
-                label="Escrow Address"
-                value={escrow}
-                onChange={setEscrow}
-                autoFillValue={defaultEscrow}
-                onAutoFill={setEscrow}
-                placeholder="Escrow PDA address"
-                required
-            />
+            {!hideKnownFields && (
+                <FormField
+                    label="Escrow Address"
+                    value={escrow}
+                    onChange={setEscrow}
+                    autoFillValue={defaultEscrow}
+                    onAutoFill={setEscrow}
+                    placeholder="Escrow PDA address"
+                    required
+                />
+            )}
             <SelectField
                 label="Extension Type"
                 value={extensionType}
@@ -81,7 +98,7 @@ export function RemoveExtension() {
                 options={EXTENSION_OPTIONS}
                 hint="Select which escrow extension to remove"
             />
-            <SendButton sending={sending} />
+            <SendButton sending={sending} label={submitLabel} />
             <TxResult signature={signature} error={formError ?? error} />
         </form>
     );

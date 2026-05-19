@@ -11,13 +11,27 @@ import { TxResult } from '@/components/TxResult';
 import { firstValidationError, validateAddress } from '@/lib/validation';
 import { FormField, SendButton } from './shared';
 
-export function SetHook() {
+interface SetHookProps {
+    hideKnownFields?: boolean;
+    initialEscrow?: string;
+    initialHookProgram?: string;
+    onSuccess?: () => void;
+    submitLabel?: string;
+}
+
+export function SetHook({
+    hideKnownFields = false,
+    initialEscrow = '',
+    initialHookProgram = '',
+    onSuccess,
+    submitLabel,
+}: SetHookProps = {}) {
     const { createSigner } = useWallet();
     const { send, sending, signature, error, reset } = useSendTx();
     const { defaultEscrow, rememberEscrow } = useSavedValues();
     const { programId } = useProgramContext();
-    const [escrow, setEscrow] = useState('');
-    const [hookProgram, setHookProgram] = useState('');
+    const [escrow, setEscrow] = useState(initialEscrow);
+    const [hookProgram, setHookProgram] = useState(initialHookProgram);
     const [formError, setFormError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -51,6 +65,7 @@ export function SetHook() {
         });
         if (txSignature) {
             rememberEscrow(escrow);
+            onSuccess?.();
         }
     };
 
@@ -61,15 +76,17 @@ export function SetHook() {
             }}
             style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
         >
-            <FormField
-                label="Escrow Address"
-                value={escrow}
-                onChange={setEscrow}
-                autoFillValue={defaultEscrow}
-                onAutoFill={setEscrow}
-                placeholder="Escrow PDA address"
-                required
-            />
+            {!hideKnownFields && (
+                <FormField
+                    label="Escrow Address"
+                    value={escrow}
+                    onChange={setEscrow}
+                    autoFillValue={defaultEscrow}
+                    onAutoFill={setEscrow}
+                    placeholder="Escrow PDA address"
+                    required
+                />
+            )}
             <FormField
                 label="Hook Program Address"
                 value={hookProgram}
@@ -78,7 +95,7 @@ export function SetHook() {
                 hint="Warning: if this escrow is later set immutable, this hook dependency becomes permanent and hook reverts will block operations."
                 required
             />
-            <SendButton sending={sending} />
+            <SendButton sending={sending} label={submitLabel} />
             <TxResult signature={signature} error={formError ?? error} />
         </form>
     );

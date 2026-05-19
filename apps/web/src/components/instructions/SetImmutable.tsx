@@ -12,12 +12,24 @@ import { TxResult } from '@/components/TxResult';
 import { firstValidationError, validateAddress } from '@/lib/validation';
 import { FormField, SendButton } from './shared';
 
-export function SetImmutable() {
+interface SetImmutableProps {
+    hideKnownFields?: boolean;
+    initialEscrow?: string;
+    onSuccess?: () => void;
+    submitLabel?: string;
+}
+
+export function SetImmutable({
+    hideKnownFields = false,
+    initialEscrow = '',
+    onSuccess,
+    submitLabel,
+}: SetImmutableProps = {}) {
     const { createSigner } = useWallet();
     const { send, sending, signature, error, reset } = useSendTx();
     const { defaultEscrow, rememberEscrow } = useSavedValues();
     const { programId } = useProgramContext();
-    const [escrow, setEscrow] = useState('');
+    const [escrow, setEscrow] = useState(initialEscrow);
     const [formError, setFormError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -47,6 +59,7 @@ export function SetImmutable() {
         });
         if (txSignature) {
             rememberEscrow(escrow);
+            onSuccess?.();
         }
     };
 
@@ -63,16 +76,18 @@ export function SetImmutable() {
                     becomes permanent, and hook reverts will block escrow operations.
                 </Badge>
             </div>
-            <FormField
-                label="Escrow Address"
-                value={escrow}
-                onChange={setEscrow}
-                autoFillValue={defaultEscrow}
-                onAutoFill={setEscrow}
-                placeholder="Escrowae7..."
-                required
-            />
-            <SendButton sending={sending} />
+            {!hideKnownFields && (
+                <FormField
+                    label="Escrow Address"
+                    value={escrow}
+                    onChange={setEscrow}
+                    autoFillValue={defaultEscrow}
+                    onAutoFill={setEscrow}
+                    placeholder="Escrowae7..."
+                    required
+                />
+            )}
+            <SendButton sending={sending} label={submitLabel} />
             <TxResult signature={signature} error={formError ?? error} />
         </form>
     );

@@ -22,13 +22,27 @@ const EXTENSION_OPTIONS = [
     { label: 'MetadataPointer (18)', value: '18' },
 ];
 
-export function BlockTokenExtension() {
+interface BlockTokenExtensionProps {
+    hideKnownFields?: boolean;
+    initialEscrow?: string;
+    initialExtensionType?: string;
+    onSuccess?: () => void;
+    submitLabel?: string;
+}
+
+export function BlockTokenExtension({
+    hideKnownFields = false,
+    initialEscrow = '',
+    initialExtensionType = '5',
+    onSuccess,
+    submitLabel,
+}: BlockTokenExtensionProps = {}) {
     const { createSigner } = useWallet();
     const { send, sending, signature, error, reset } = useSendTx();
     const { defaultEscrow, rememberEscrow } = useSavedValues();
     const { programId } = useProgramContext();
-    const [escrow, setEscrow] = useState('');
-    const [extensionType, setExtensionType] = useState('5');
+    const [escrow, setEscrow] = useState(initialEscrow);
+    const [extensionType, setExtensionType] = useState(initialExtensionType);
     const [formError, setFormError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -64,6 +78,7 @@ export function BlockTokenExtension() {
         });
         if (txSignature) {
             rememberEscrow(escrow);
+            onSuccess?.();
         }
     };
 
@@ -74,15 +89,17 @@ export function BlockTokenExtension() {
             }}
             style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
         >
-            <FormField
-                label="Escrow Address"
-                value={escrow}
-                onChange={setEscrow}
-                autoFillValue={defaultEscrow}
-                onAutoFill={setEscrow}
-                placeholder="Escrow PDA address"
-                required
-            />
+            {!hideKnownFields && (
+                <FormField
+                    label="Escrow Address"
+                    value={escrow}
+                    onChange={setEscrow}
+                    autoFillValue={defaultEscrow}
+                    onAutoFill={setEscrow}
+                    placeholder="Escrow PDA address"
+                    required
+                />
+            )}
             <SelectField
                 label="Extension Type"
                 value={extensionType}
@@ -90,7 +107,7 @@ export function BlockTokenExtension() {
                 options={EXTENSION_OPTIONS}
                 hint="SPL Token-2022 extension type to block from deposits"
             />
-            <SendButton sending={sending} />
+            <SendButton sending={sending} label={submitLabel} />
             <TxResult signature={signature} error={formError ?? error} />
         </form>
     );

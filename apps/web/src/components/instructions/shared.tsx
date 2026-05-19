@@ -79,10 +79,10 @@ export function SelectField({ label, value, onChange, options, hint }: SelectFie
     );
 }
 
-export function SendButton({ sending }: { sending: boolean }) {
+export function SendButton({ label = 'Send Transaction', sending }: { label?: string; sending: boolean }) {
     return (
         <Button type="submit" loading={sending} disabled={sending} style={{ marginTop: 8, alignSelf: 'flex-start' }}>
-            {sending ? 'Sending Transaction' : 'Send Transaction'}
+            {sending ? 'Sending Transaction' : label}
         </Button>
     );
 }

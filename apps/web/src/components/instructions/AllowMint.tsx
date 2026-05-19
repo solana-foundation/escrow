@@ -11,13 +11,27 @@ import { TxResult } from '@/components/TxResult';
 import { firstValidationError, validateAddress } from '@/lib/validation';
 import { FormField, SendButton } from './shared';
 
-export function AllowMint() {
+interface AllowMintProps {
+    hideKnownFields?: boolean;
+    initialEscrow?: string;
+    initialMint?: string;
+    onSuccess?: () => void;
+    submitLabel?: string;
+}
+
+export function AllowMint({
+    hideKnownFields = false,
+    initialEscrow = '',
+    initialMint = '',
+    onSuccess,
+    submitLabel,
+}: AllowMintProps = {}) {
     const { createSigner } = useWallet();
     const { send, sending, signature, error, reset } = useSendTx();
     const { defaultEscrow, defaultMint, rememberEscrow, rememberMint } = useSavedValues();
     const { programId } = useProgramContext();
-    const [escrow, setEscrow] = useState('');
-    const [mint, setMint] = useState('');
+    const [escrow, setEscrow] = useState(initialEscrow);
+    const [mint, setMint] = useState(initialMint);
     const [formError, setFormError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -52,6 +66,7 @@ export function AllowMint() {
         if (txSignature) {
             rememberEscrow(escrow);
             rememberMint(mint);
+            onSuccess?.();
         }
     };
 
@@ -62,25 +77,29 @@ export function AllowMint() {
             }}
             style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
         >
-            <FormField
-                label="Escrow Address"
-                value={escrow}
-                onChange={setEscrow}
-                autoFillValue={defaultEscrow}
-                onAutoFill={setEscrow}
-                placeholder="Escrow PDA address"
-                required
-            />
-            <FormField
-                label="Mint Address"
-                value={mint}
-                onChange={setMint}
-                autoFillValue={defaultMint}
-                onAutoFill={setMint}
-                placeholder="SPL token mint to allow"
-                required
-            />
-            <SendButton sending={sending} />
+            {!hideKnownFields && (
+                <>
+                    <FormField
+                        label="Escrow Address"
+                        value={escrow}
+                        onChange={setEscrow}
+                        autoFillValue={defaultEscrow}
+                        onAutoFill={setEscrow}
+                        placeholder="Escrow PDA address"
+                        required
+                    />
+                    <FormField
+                        label="Mint Address"
+                        value={mint}
+                        onChange={setMint}
+                        autoFillValue={defaultMint}
+                        onAutoFill={setMint}
+                        placeholder="SPL token mint to allow"
+                        required
+                    />
+                </>
+            )}
+            <SendButton sending={sending} label={submitLabel} />
             <TxResult signature={signature} error={formError ?? error} />
         </form>
     );

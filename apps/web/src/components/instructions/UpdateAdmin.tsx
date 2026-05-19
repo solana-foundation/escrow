@@ -12,12 +12,24 @@ import { TxResult } from '@/components/TxResult';
 import { firstValidationError, validateAddress } from '@/lib/validation';
 import { FormField, SendButton } from './shared';
 
-export function UpdateAdmin() {
+interface UpdateAdminProps {
+    hideKnownFields?: boolean;
+    initialEscrow?: string;
+    onSuccess?: () => void;
+    submitLabel?: string;
+}
+
+export function UpdateAdmin({
+    hideKnownFields = false,
+    initialEscrow = '',
+    onSuccess,
+    submitLabel,
+}: UpdateAdminProps = {}) {
     const { createSigner } = useWallet();
     const { send, sending, signature, error, reset } = useSendTx();
     const { defaultEscrow, rememberEscrow } = useSavedValues();
     const { programId } = useProgramContext();
-    const [escrow, setEscrow] = useState('');
+    const [escrow, setEscrow] = useState(initialEscrow);
     const [formError, setFormError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -47,6 +59,7 @@ export function UpdateAdmin() {
         });
         if (txSignature) {
             rememberEscrow(escrow);
+            onSuccess?.();
         }
     };
 
@@ -60,16 +73,18 @@ export function UpdateAdmin() {
             <div>
                 <Badge variant="info">Current and new admin must both sign. This form uses your wallet for both.</Badge>
             </div>
-            <FormField
-                label="Escrow Address"
-                value={escrow}
-                onChange={setEscrow}
-                autoFillValue={defaultEscrow}
-                onAutoFill={setEscrow}
-                placeholder="Escrowae7..."
-                required
-            />
-            <SendButton sending={sending} />
+            {!hideKnownFields && (
+                <FormField
+                    label="Escrow Address"
+                    value={escrow}
+                    onChange={setEscrow}
+                    autoFillValue={defaultEscrow}
+                    onAutoFill={setEscrow}
+                    placeholder="Escrowae7..."
+                    required
+                />
+            )}
+            <SendButton sending={sending} label={submitLabel} />
             <TxResult signature={signature} error={formError ?? error} />
         </form>
     );

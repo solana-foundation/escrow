@@ -12,12 +12,24 @@ import { TxResult } from '@/components/TxResult';
 import { firstValidationError, validateAddress } from '@/lib/validation';
 import { FormField, SendButton } from './shared';
 
-export function SetArbiter() {
+interface SetArbiterProps {
+    hideKnownFields?: boolean;
+    initialEscrow?: string;
+    onSuccess?: () => void;
+    submitLabel?: string;
+}
+
+export function SetArbiter({
+    hideKnownFields = false,
+    initialEscrow = '',
+    onSuccess,
+    submitLabel,
+}: SetArbiterProps = {}) {
     const { createSigner } = useWallet();
     const { send, sending, signature, error, reset } = useSendTx();
     const { defaultEscrow, rememberEscrow } = useSavedValues();
     const { programId } = useProgramContext();
-    const [escrow, setEscrow] = useState('');
+    const [escrow, setEscrow] = useState(initialEscrow);
     const [formError, setFormError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -53,6 +65,7 @@ export function SetArbiter() {
         });
         if (txSignature) {
             rememberEscrow(escrow);
+            onSuccess?.();
         }
     };
 
@@ -68,16 +81,18 @@ export function SetArbiter() {
                     Arbiter must co-sign with admin. This form sets your connected wallet as arbiter.
                 </Badge>
             </div>
-            <FormField
-                label="Escrow Address"
-                value={escrow}
-                onChange={setEscrow}
-                autoFillValue={defaultEscrow}
-                onAutoFill={setEscrow}
-                placeholder="Escrow PDA address"
-                required
-            />
-            <SendButton sending={sending} />
+            {!hideKnownFields && (
+                <FormField
+                    label="Escrow Address"
+                    value={escrow}
+                    onChange={setEscrow}
+                    autoFillValue={defaultEscrow}
+                    onAutoFill={setEscrow}
+                    placeholder="Escrow PDA address"
+                    required
+                />
+            )}
+            <SendButton sending={sending} label={submitLabel} />
             <TxResult signature={signature} error={formError ?? error} />
         </form>
     );

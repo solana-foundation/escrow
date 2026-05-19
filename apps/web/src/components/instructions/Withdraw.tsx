@@ -45,17 +45,35 @@ function parseExtensions(data: Uint8Array): { arbiter: Address | null; hookProgr
     return { arbiter, hookProgram };
 }
 
-export function Withdraw() {
+interface WithdrawProps {
+    hideKnownFields?: boolean;
+    initialEscrow?: string;
+    initialMint?: string;
+    initialReceipt?: string;
+    initialRentRecipient?: string;
+    onSuccess?: () => void;
+    submitLabel?: string;
+}
+
+export function Withdraw({
+    hideKnownFields = false,
+    initialEscrow = '',
+    initialMint = '',
+    initialReceipt = '',
+    initialRentRecipient = '',
+    onSuccess,
+    submitLabel,
+}: WithdrawProps = {}) {
     const { account, createSigner } = useWallet();
     const { send, sending, signature, error, reset } = useSendTx();
     const { defaultEscrow, defaultMint, defaultReceipt, rememberEscrow, rememberMint, rememberReceipt } =
         useSavedValues();
     const { programId } = useProgramContext();
     const { rpcUrl } = useRpcContext();
-    const [escrow, setEscrow] = useState('');
-    const [mint, setMint] = useState('');
-    const [receipt, setReceipt] = useState('');
-    const [rentRecipient, setRentRecipient] = useState('');
+    const [escrow, setEscrow] = useState(initialEscrow);
+    const [mint, setMint] = useState(initialMint);
+    const [receipt, setReceipt] = useState(initialReceipt);
+    const [rentRecipient, setRentRecipient] = useState(initialRentRecipient);
     const [formError, setFormError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -124,6 +142,7 @@ export function Withdraw() {
             rememberEscrow(escrow);
             rememberMint(mint);
             rememberReceipt(receipt);
+            onSuccess?.();
         }
     };
 
@@ -134,34 +153,38 @@ export function Withdraw() {
             }}
             style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
         >
-            <FormField
-                label="Escrow Address"
-                value={escrow}
-                onChange={setEscrow}
-                autoFillValue={defaultEscrow}
-                onAutoFill={setEscrow}
-                placeholder="Escrow PDA address"
-                required
-            />
-            <FormField
-                label="Mint Address"
-                value={mint}
-                onChange={setMint}
-                autoFillValue={defaultMint}
-                onAutoFill={setMint}
-                placeholder="SPL token mint address"
-                required
-            />
-            <FormField
-                label="Receipt Address"
-                value={receipt}
-                onChange={setReceipt}
-                autoFillValue={defaultReceipt}
-                onAutoFill={setReceipt}
-                placeholder="Receipt PDA address from deposit"
-                hint="The receipt PDA created during Deposit"
-                required
-            />
+            {!hideKnownFields && (
+                <>
+                    <FormField
+                        label="Escrow Address"
+                        value={escrow}
+                        onChange={setEscrow}
+                        autoFillValue={defaultEscrow}
+                        onAutoFill={setEscrow}
+                        placeholder="Escrow PDA address"
+                        required
+                    />
+                    <FormField
+                        label="Mint Address"
+                        value={mint}
+                        onChange={setMint}
+                        autoFillValue={defaultMint}
+                        onAutoFill={setMint}
+                        placeholder="SPL token mint address"
+                        required
+                    />
+                    <FormField
+                        label="Receipt Address"
+                        value={receipt}
+                        onChange={setReceipt}
+                        autoFillValue={defaultReceipt}
+                        onAutoFill={setReceipt}
+                        placeholder="Receipt PDA address from deposit"
+                        hint="The receipt PDA created during Deposit"
+                        required
+                    />
+                </>
+            )}
             <FormField
                 label="Rent Recipient"
                 value={rentRecipient}
@@ -169,7 +192,7 @@ export function Withdraw() {
                 placeholder={account?.address ?? 'Defaults to connected wallet'}
                 hint="Address that receives rent from the closed receipt account"
             />
-            <SendButton sending={sending} />
+            <SendButton sending={sending} label={submitLabel} />
             <TxResult signature={signature} error={formError ?? error} />
         </form>
     );

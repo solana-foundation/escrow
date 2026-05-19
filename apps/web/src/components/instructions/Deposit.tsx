@@ -11,14 +11,30 @@ import { TxResult } from '@/components/TxResult';
 import { firstValidationError, validateAddress, validatePositiveInteger } from '@/lib/validation';
 import { FormField, SendButton } from './shared';
 
-export function Deposit() {
+interface DepositProps {
+    hideKnownFields?: boolean;
+    initialAmount?: string;
+    initialEscrow?: string;
+    initialMint?: string;
+    onSuccess?: () => void;
+    submitLabel?: string;
+}
+
+export function Deposit({
+    hideKnownFields = false,
+    initialAmount = '',
+    initialEscrow = '',
+    initialMint = '',
+    onSuccess,
+    submitLabel,
+}: DepositProps = {}) {
     const { createSigner } = useWallet();
     const { send, sending, signature, error, reset } = useSendTx();
     const { defaultEscrow, defaultMint, rememberEscrow, rememberMint, rememberReceipt } = useSavedValues();
     const { programId } = useProgramContext();
-    const [escrow, setEscrow] = useState('');
-    const [mint, setMint] = useState('');
-    const [amount, setAmount] = useState('');
+    const [escrow, setEscrow] = useState(initialEscrow);
+    const [mint, setMint] = useState(initialMint);
+    const [amount, setAmount] = useState(initialAmount);
     const [generatedSeed, setGeneratedSeed] = useState('');
     const [generatedReceipt, setGeneratedReceipt] = useState('');
     const [formError, setFormError] = useState<string | null>(null);
@@ -73,6 +89,7 @@ export function Deposit() {
             rememberEscrow(escrow);
             rememberMint(mint);
             rememberReceipt(receipt);
+            onSuccess?.();
         }
     };
 
@@ -83,24 +100,28 @@ export function Deposit() {
             }}
             style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
         >
-            <FormField
-                label="Escrow Address"
-                value={escrow}
-                onChange={setEscrow}
-                autoFillValue={defaultEscrow}
-                onAutoFill={setEscrow}
-                placeholder="Escrow PDA address"
-                required
-            />
-            <FormField
-                label="Mint Address"
-                value={mint}
-                onChange={setMint}
-                autoFillValue={defaultMint}
-                onAutoFill={setMint}
-                placeholder="SPL token mint address"
-                required
-            />
+            {!hideKnownFields && (
+                <>
+                    <FormField
+                        label="Escrow Address"
+                        value={escrow}
+                        onChange={setEscrow}
+                        autoFillValue={defaultEscrow}
+                        onAutoFill={setEscrow}
+                        placeholder="Escrow PDA address"
+                        required
+                    />
+                    <FormField
+                        label="Mint Address"
+                        value={mint}
+                        onChange={setMint}
+                        autoFillValue={defaultMint}
+                        onAutoFill={setMint}
+                        placeholder="SPL token mint address"
+                        required
+                    />
+                </>
+            )}
             <FormField
                 label="Amount (in base units)"
                 value={amount}
@@ -128,7 +149,7 @@ export function Deposit() {
                     hint="Saved as the default receipt when deposit succeeds"
                 />
             )}
-            <SendButton sending={sending} />
+            <SendButton sending={sending} label={submitLabel} />
             <TxResult signature={signature} error={formError ?? error} />
         </form>
     );
