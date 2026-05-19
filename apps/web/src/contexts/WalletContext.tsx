@@ -1,16 +1,6 @@
-'use client';
-
 import { createContext, useCallback, useContext, useMemo } from 'react';
-import type { Address, TransactionSigner } from '@solana/kit';
-import {
-    ConnectionProvider,
-    WalletProvider as AdapterWalletProvider,
-    useWallet as useAdapterWallet,
-} from '@solana/wallet-adapter-react';
-import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
-import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
-import { createWalletAdapterTransactionSigner } from '@/lib/walletSigner';
-import { useRpcContext } from '@/contexts/RpcContext';
+import type { TransactionSigner } from '@solana/kit';
+import { useKitTransactionSigner, useWallet as useConnectorWallet } from '@solana/connector/react';
 
 interface WalletAccount {
     address: string;
@@ -25,46 +15,23 @@ interface WalletContextType {
 
 const WalletContext = createContext<WalletContextType | null>(null);
 
-function WalletStateProvider({ children }: { children: React.ReactNode }) {
-    const { publicKey, connected, connecting, signTransaction } = useAdapterWallet();
+export function WalletProvider({ children }: { children: React.ReactNode }) {
+    const { account: connectorAccount, isConnected, isConnecting } = useConnectorWallet();
+    const { signer } = useKitTransactionSigner();
 
     const account = useMemo<WalletAccount | null>(
-        () => (publicKey ? { address: publicKey.toBase58() } : null),
-        [publicKey],
+        () => (connectorAccount ? { address: connectorAccount } : null),
+        [connectorAccount],
     );
 
-    const signer = useMemo<TransactionSigner | null>(() => {
-        if (!publicKey || !signTransaction) return null;
-        return createWalletAdapterTransactionSigner(
-            publicKey.toBase58() as Address,
-            // Wallet-adapter preserves the transaction type and returns a signed tx.
-            tx => signTransaction(tx),
-        );
-    }, [publicKey, signTransaction]);
-
-    const createSigner = useCallback((): TransactionSigner | null => signer, [signer]);
+    const createSigner = useCallback((): TransactionSigner | null => signer ?? null, [signer]);
 
     const value = useMemo(
-        () => ({ account, connected, connecting, createSigner }),
-        [account, connected, connecting, createSigner],
+        () => ({ account, connected: isConnected, connecting: isConnecting, createSigner }),
+        [account, createSigner, isConnected, isConnecting],
     );
 
     return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;
-}
-
-export function WalletProvider({ children }: { children: React.ReactNode }) {
-    const { rpcUrl } = useRpcContext();
-    const wallets = useMemo(() => [new PhantomWalletAdapter(), new SolflareWalletAdapter()], []);
-
-    return (
-        <ConnectionProvider endpoint={rpcUrl}>
-            <AdapterWalletProvider wallets={wallets} autoConnect>
-                <WalletModalProvider>
-                    <WalletStateProvider>{children}</WalletStateProvider>
-                </WalletModalProvider>
-            </AdapterWalletProvider>
-        </ConnectionProvider>
-    );
 }
 
 export function useWallet() {

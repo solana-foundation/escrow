@@ -1,9 +1,10 @@
-'use client';
-
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 const STORAGE_KEY = 'escrow-program-id';
-const DEFAULT_PROGRAM_ID = process.env.NEXT_PUBLIC_PROGRAM_ID ?? 'Escrowae7RaUfNn4oEZHywMXE5zWzYCXenwrCDaEoifg';
+const viteEnv = import.meta.env as unknown as {
+    readonly VITE_PROGRAM_ID?: string;
+};
+const DEFAULT_PROGRAM_ID = viteEnv.VITE_PROGRAM_ID ?? 'Escrowae7RaUfNn4oEZHywMXE5zWzYCXenwrCDaEoifg';
 
 interface ProgramContextType {
     programId: string;

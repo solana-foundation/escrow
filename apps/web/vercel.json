@@ -1,4 +1,4 @@
 {
-    "framework": "nextjs",
-    "installCommand": "cd ../.. && pnpm install --frozen-lockfile"
+    "framework": "vite",
+    "installCommand": "pnpm install --frozen-lockfile"
 }

@@ -1,5 +1,12 @@
 export type Cluster = 'devnet' | 'mainnet-beta' | 'testnet' | 'localnet';
 
+export function getClusterFromClusterId(clusterId: string): Cluster {
+    if (clusterId === 'solana:mainnet') return 'mainnet-beta';
+    if (clusterId === 'solana:devnet') return 'devnet';
+    if (clusterId === 'solana:testnet') return 'testnet';
+    return 'localnet';
+}
+
 export function getClusterFromRpcUrl(rpcUrl: string): Cluster {
     if (rpcUrl.includes('devnet')) return 'devnet';
     if (rpcUrl.includes('mainnet')) return 'mainnet-beta';

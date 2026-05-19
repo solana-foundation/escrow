@@ -1,10 +1,7 @@
-'use client';
+import { useCluster } from '@solana/connector/react';
+import { createContext, useCallback, useContext, useMemo } from 'react';
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-
-const STORAGE_KEY = 'escrow-rpc-url';
 const FALLBACK_RPC = 'https://api.devnet.solana.com';
-const DEFAULT_RPC = process.env.NEXT_PUBLIC_RPC_URL ?? FALLBACK_RPC;
 
 export const RPC_PRESETS = [
     { label: 'Devnet', url: 'https://api.devnet.solana.com' },
@@ -21,19 +18,19 @@ interface RpcContextType {
 const RpcContext = createContext<RpcContextType | null>(null);
 
 export function RpcProvider({ children }: { children: React.ReactNode }) {
-    const [rpcUrl, setRpcUrlState] = useState<string>(DEFAULT_RPC);
+    const { cluster, clusters, setCluster } = useCluster();
+    const rpcUrl = cluster?.url ?? FALLBACK_RPC;
 
-    useEffect(() => {
-        const storedRpcUrl = window.localStorage.getItem(STORAGE_KEY);
-        if (storedRpcUrl) {
-            setRpcUrlState(storedRpcUrl);
-        }
-    }, []);
-
-    const setRpcUrl = useCallback((url: string) => {
-        window.localStorage.setItem(STORAGE_KEY, url);
-        setRpcUrlState(url);
-    }, []);
+    const setRpcUrl = useCallback(
+        (url: string) => {
+            const matchingCluster = clusters.find(c => c.url === url);
+            if (matchingCluster) {
+                localStorage.setItem('escrow-cluster', matchingCluster.id);
+                void setCluster(matchingCluster.id);
+            }
+        },
+        [clusters, setCluster],
+    );
 
     const value = useMemo(() => ({ rpcUrl, setRpcUrl }), [rpcUrl, setRpcUrl]);
 
