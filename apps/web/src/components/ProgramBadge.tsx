@@ -1,132 +1,90 @@
-'use client';
+import { useState } from 'react';
+import { Button, TextInput } from '@solana/design-system';
+import { ChevronDown, Code2 } from 'lucide-react';
 
-import { useEffect, useRef, useState } from 'react';
-import { Button } from '@solana/design-system/button';
-import { TextInput } from '@solana/design-system/text-input';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { DEFAULT_PROGRAM_ID, useProgramContext } from '@/contexts/ProgramContext';
-
-function truncateAddress(address: string): string {
-    return `${address.slice(0, 8)}…${address.slice(-8)}`;
-}
+import { ellipsify } from '@/lib/utils';
+import { validateAddress } from '@/lib/validation';
 
 export function ProgramBadge() {
     const { programId, setProgramId } = useProgramContext();
-    const [open, setOpen] = useState(false);
     const [customInput, setCustomInput] = useState('');
-    const containerRef = useRef<HTMLDivElement | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [open, setOpen] = useState(false);
 
-    const label = programId === DEFAULT_PROGRAM_ID ? 'Default' : truncateAddress(programId);
+    function applyCustomProgramId() {
+        const validationError = validateAddress(customInput, 'Program ID');
+        if (validationError) {
+            setError(validationError);
+            return;
+        }
 
-    useEffect(() => {
-        const handlePointerDown = (event: MouseEvent) => {
-            if (!open) return;
-            if (!containerRef.current?.contains(event.target as Node)) {
-                setOpen(false);
-            }
-        };
+        setProgramId(customInput.trim());
+        setCustomInput('');
+        setError(null);
+        setOpen(false);
+    }
 
-        const handleEscape = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') {
-                setOpen(false);
-            }
-        };
+    function resetToDefault() {
+        setProgramId(DEFAULT_PROGRAM_ID);
+        setCustomInput('');
+        setError(null);
+        setOpen(false);
+    }
 
-        document.addEventListener('mousedown', handlePointerDown);
-        document.addEventListener('keydown', handleEscape);
-        return () => {
-            document.removeEventListener('mousedown', handlePointerDown);
-            document.removeEventListener('keydown', handleEscape);
-        };
-    }, [open]);
+    const hasCustomProgramId = programId !== DEFAULT_PROGRAM_ID;
+    const label = hasCustomProgramId ? `Custom ${ellipsify(programId, 4)}` : 'Default Program';
 
     return (
-        <div ref={containerRef} style={{ position: 'relative' }}>
-            <Button
-                onClick={() => setOpen(v => !v)}
-                variant="secondary"
-                size="sm"
-                style={{
-                    fontSize: '0.75rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 4,
-                }}
-            >
-                Program: {label} ▾
-            </Button>
-
-            {open && (
-                <div
-                    style={{
-                        position: 'absolute',
-                        top: '110%',
-                        left: 0,
-                        background: 'var(--color-card)',
-                        border: '1px solid var(--color-border)',
-                        borderRadius: 6,
-                        minWidth: 340,
-                        zIndex: 100,
-                        overflow: 'hidden',
-                    }}
+        <DropdownMenu open={open} onOpenChange={setOpen}>
+            <DropdownMenuTrigger asChild>
+                <Button
+                    iconLeft={<Code2 />}
+                    iconRight={<ChevronDown className="opacity-60" />}
+                    size="sm"
+                    variant="secondary"
                 >
-                    <div
-                        style={{
-                            padding: '8px 10px',
-                            display: 'flex',
-                            gap: 6,
-                            alignItems: 'center',
+                    {label}
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-96 p-3">
+                <DropdownMenuLabel className="space-y-1 px-0">
+                    <div className="text-sm">Program ID</div>
+                    <div className="font-mono text-xs text-muted-foreground">{ellipsify(programId, 8)}</div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <div className="space-y-3">
+                    <TextInput
+                        value={customInput}
+                        onChange={e => setCustomInput(e.target.value)}
+                        placeholder="Enter custom program ID"
+                        size="md"
+                        inputClassName="font-mono"
+                        onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                applyCustomProgramId();
+                            }
                         }}
-                    >
-                        <div style={{ flex: 1 }}>
-                            <TextInput
-                                value={customInput}
-                                onChange={e => setCustomInput(e.target.value)}
-                                placeholder={DEFAULT_PROGRAM_ID}
-                                size="md"
-                                onKeyDown={e => {
-                                    if (e.key === 'Enter' && customInput) {
-                                        setProgramId(customInput);
-                                        setCustomInput('');
-                                        setOpen(false);
-                                    }
-                                }}
-                            />
-                        </div>
-                        <Button
-                            onClick={() => {
-                                if (customInput) {
-                                    setProgramId(customInput);
-                                    setCustomInput('');
-                                    setOpen(false);
-                                }
-                            }}
-                            size="sm"
-                        >
-                            Set
+                    />
+                    {error && <div className="text-xs text-destructive">{error}</div>}
+                    <div className="flex items-center gap-2">
+                        <Button type="button" size="sm" onClick={applyCustomProgramId}>
+                            Set Program ID
+                        </Button>
+                        <Button type="button" size="sm" variant="secondary" onClick={resetToDefault}>
+                            Use Default
                         </Button>
                     </div>
-                    {programId !== DEFAULT_PROGRAM_ID && (
-                        <div
-                            style={{
-                                borderTop: '1px solid var(--color-border)',
-                                padding: '6px 10px',
-                            }}
-                        >
-                            <Button
-                                onClick={() => {
-                                    setProgramId(DEFAULT_PROGRAM_ID);
-                                    setOpen(false);
-                                }}
-                                variant="secondary"
-                                size="sm"
-                                style={{ width: '100%', fontSize: '0.8125rem' }}
-                            >
-                                Reset to default
-                            </Button>
-                        </div>
-                    )}
                 </div>
-            )}
-        </div>
+            </DropdownMenuContent>
+        </DropdownMenu>
     );
 }
