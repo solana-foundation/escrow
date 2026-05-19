@@ -1,12 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import type { Address } from '@solana/kit';
-import { getRemoveExtensionInstructionAsync } from '@solana/escrow';
-import { useSendTx } from '@/hooks/useSendTx';
 import { useSavedValues } from '@/contexts/SavedValuesContext';
-import { useWallet } from '@/contexts/WalletContext';
-import { useProgramContext } from '@/contexts/ProgramContext';
+import { useEscrowMutations } from '@/hooks/use-escrow-mutations';
 import { TxResult } from '@/components/TxResult';
 import { firstValidationError, validateAddress } from '@/lib/validation';
 import { FormField, SelectField, SendButton } from './shared';
@@ -33,20 +29,16 @@ export function RemoveExtension({
     onSuccess,
     submitLabel,
 }: RemoveExtensionProps = {}) {
-    const { createSigner } = useWallet();
-    const { send, sending, signature, error, reset } = useSendTx();
+    const { removeExtension } = useEscrowMutations();
     const { defaultEscrow, rememberEscrow } = useSavedValues();
-    const { programId } = useProgramContext();
     const [escrow, setEscrow] = useState(initialEscrow);
     const [extensionType, setExtensionType] = useState(initialExtensionType);
     const [formError, setFormError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        reset();
+        removeExtension.reset();
         setFormError(null);
-        const signer = createSigner();
-        if (!signer) return;
 
         const validationError = firstValidationError(validateAddress(escrow, 'Escrow address'));
         if (validationError) {
@@ -54,23 +46,13 @@ export function RemoveExtension({
             return;
         }
 
-        const ix = await getRemoveExtensionInstructionAsync(
-            {
-                admin: signer,
-                escrow: escrow as Address,
-                extensionType: Number(extensionType),
-                payer: signer,
-            },
-            { programAddress: programId as Address },
-        );
-        const txSignature = await send([ix], {
-            action: 'Remove Extension',
-            values: { escrow, extensionType },
-        });
-        if (txSignature) {
-            rememberEscrow(escrow);
-            onSuccess?.();
-        }
+        const result = await removeExtension
+            .mutateAsync({ escrow, extensionType: Number(extensionType) })
+            .catch(() => null);
+        if (!result) return;
+
+        rememberEscrow(escrow);
+        onSuccess?.();
     };
 
     return (
@@ -98,8 +80,8 @@ export function RemoveExtension({
                 options={EXTENSION_OPTIONS}
                 hint="Select which escrow extension to remove"
             />
-            <SendButton sending={sending} label={submitLabel} />
-            <TxResult signature={signature} error={formError ?? error} />
+            <SendButton sending={removeExtension.isPending} label={submitLabel} />
+            <TxResult signature={removeExtension.data?.signature} error={formError ?? removeExtension.error} />
         </form>
     );
 }

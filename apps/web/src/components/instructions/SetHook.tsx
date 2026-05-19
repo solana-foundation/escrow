@@ -1,12 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import type { Address } from '@solana/kit';
-import { getSetHookInstructionAsync } from '@solana/escrow';
-import { useSendTx } from '@/hooks/useSendTx';
 import { useSavedValues } from '@/contexts/SavedValuesContext';
-import { useWallet } from '@/contexts/WalletContext';
-import { useProgramContext } from '@/contexts/ProgramContext';
+import { useEscrowMutations } from '@/hooks/use-escrow-mutations';
 import { TxResult } from '@/components/TxResult';
 import { firstValidationError, validateAddress } from '@/lib/validation';
 import { FormField, SendButton } from './shared';
@@ -26,20 +22,16 @@ export function SetHook({
     onSuccess,
     submitLabel,
 }: SetHookProps = {}) {
-    const { createSigner } = useWallet();
-    const { send, sending, signature, error, reset } = useSendTx();
+    const { setHook } = useEscrowMutations();
     const { defaultEscrow, rememberEscrow } = useSavedValues();
-    const { programId } = useProgramContext();
     const [escrow, setEscrow] = useState(initialEscrow);
     const [hookProgram, setHookProgram] = useState(initialHookProgram);
     const [formError, setFormError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        reset();
+        setHook.reset();
         setFormError(null);
-        const signer = createSigner();
-        if (!signer) return;
 
         const validationError = firstValidationError(
             validateAddress(escrow, 'Escrow address'),
@@ -50,23 +42,11 @@ export function SetHook({
             return;
         }
 
-        const ix = await getSetHookInstructionAsync(
-            {
-                admin: signer,
-                escrow: escrow as Address,
-                hookProgram: hookProgram as Address,
-                payer: signer,
-            },
-            { programAddress: programId as Address },
-        );
-        const txSignature = await send([ix], {
-            action: 'Set Hook',
-            values: { escrow, hookProgram },
-        });
-        if (txSignature) {
-            rememberEscrow(escrow);
-            onSuccess?.();
-        }
+        const result = await setHook.mutateAsync({ escrow, hookProgram }).catch(() => null);
+        if (!result) return;
+
+        rememberEscrow(escrow);
+        onSuccess?.();
     };
 
     return (
@@ -95,8 +75,8 @@ export function SetHook({
                 hint="Warning: if this escrow is later set immutable, this hook dependency becomes permanent and hook reverts will block operations."
                 required
             />
-            <SendButton sending={sending} label={submitLabel} />
-            <TxResult signature={signature} error={formError ?? error} />
+            <SendButton sending={setHook.isPending} label={submitLabel} />
+            <TxResult signature={setHook.data?.signature} error={formError ?? setHook.error} />
         </form>
     );
 }

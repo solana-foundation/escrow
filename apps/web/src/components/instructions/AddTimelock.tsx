@@ -1,12 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import type { Address } from '@solana/kit';
-import { getAddTimelockInstructionAsync } from '@solana/escrow';
-import { useSendTx } from '@/hooks/useSendTx';
 import { useSavedValues } from '@/contexts/SavedValuesContext';
-import { useWallet } from '@/contexts/WalletContext';
-import { useProgramContext } from '@/contexts/ProgramContext';
+import { useEscrowMutations } from '@/hooks/use-escrow-mutations';
 import { TxResult } from '@/components/TxResult';
 import { firstValidationError, validateAddress, validatePositiveInteger } from '@/lib/validation';
 import { FormField, SendButton } from './shared';
@@ -26,20 +22,16 @@ export function AddTimelock({
     onSuccess,
     submitLabel,
 }: AddTimelockProps = {}) {
-    const { createSigner } = useWallet();
-    const { send, sending, signature, error, reset } = useSendTx();
+    const { addTimelock } = useEscrowMutations();
     const { defaultEscrow, rememberEscrow } = useSavedValues();
-    const { programId } = useProgramContext();
     const [escrow, setEscrow] = useState(initialEscrow);
     const [lockDuration, setLockDuration] = useState(initialLockDuration);
     const [formError, setFormError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        reset();
+        addTimelock.reset();
         setFormError(null);
-        const signer = createSigner();
-        if (!signer) return;
 
         const validationError = firstValidationError(
             validateAddress(escrow, 'Escrow address'),
@@ -50,23 +42,16 @@ export function AddTimelock({
             return;
         }
 
-        const ix = await getAddTimelockInstructionAsync(
-            {
-                admin: signer,
-                escrow: escrow as Address,
+        const result = await addTimelock
+            .mutateAsync({
+                escrow,
                 lockDuration: BigInt(lockDuration),
-                payer: signer,
-            },
-            { programAddress: programId as Address },
-        );
-        const txSignature = await send([ix], {
-            action: 'Add Timelock',
-            values: { escrow, lockDuration },
-        });
-        if (txSignature) {
-            rememberEscrow(escrow);
-            onSuccess?.();
-        }
+            })
+            .catch(() => null);
+        if (!result) return;
+
+        rememberEscrow(escrow);
+        onSuccess?.();
     };
 
     return (
@@ -95,8 +80,8 @@ export function AddTimelock({
                 type="number"
                 required
             />
-            <SendButton sending={sending} label={submitLabel} />
-            <TxResult signature={signature} error={formError ?? error} />
+            <SendButton sending={addTimelock.isPending} label={submitLabel} />
+            <TxResult signature={addTimelock.data?.signature} error={formError ?? addTimelock.error} />
         </form>
     );
 }

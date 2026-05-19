@@ -1,12 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { generateKeyPairSigner, type Address } from '@solana/kit';
-import { findReceiptPda, getDepositInstructionAsync } from '@solana/escrow';
-import { useSendTx } from '@/hooks/useSendTx';
 import { useSavedValues } from '@/contexts/SavedValuesContext';
-import { useWallet } from '@/contexts/WalletContext';
-import { useProgramContext } from '@/contexts/ProgramContext';
+import { useEscrowMutations } from '@/hooks/use-escrow-mutations';
 import { TxResult } from '@/components/TxResult';
 import { firstValidationError, validateAddress, validatePositiveInteger } from '@/lib/validation';
 import { FormField, SendButton } from './shared';
@@ -28,10 +24,8 @@ export function Deposit({
     onSuccess,
     submitLabel,
 }: DepositProps = {}) {
-    const { createSigner } = useWallet();
-    const { send, sending, signature, error, reset } = useSendTx();
+    const { deposit } = useEscrowMutations();
     const { defaultEscrow, defaultMint, rememberEscrow, rememberMint, rememberReceipt } = useSavedValues();
-    const { programId } = useProgramContext();
     const [escrow, setEscrow] = useState(initialEscrow);
     const [mint, setMint] = useState(initialMint);
     const [amount, setAmount] = useState(initialAmount);
@@ -41,10 +35,8 @@ export function Deposit({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        reset();
+        deposit.reset();
         setFormError(null);
-        const signer = createSigner();
-        if (!signer) return;
 
         const validationError = firstValidationError(
             validateAddress(escrow, 'Escrow address'),
@@ -56,41 +48,21 @@ export function Deposit({
             return;
         }
 
-        const receiptSeed = await generateKeyPairSigner();
-        setGeneratedSeed(receiptSeed.address);
-        const signerAddress = signer.address as Address;
-        const [receipt] = await findReceiptPda(
-            {
-                escrow: escrow as Address,
-                depositor: signerAddress,
-                mint: mint as Address,
-                receiptSeed: receiptSeed.address,
-            },
-            { programAddress: programId as Address },
-        );
-        setGeneratedReceipt(receipt);
-
-        const ix = await getDepositInstructionAsync(
-            {
-                depositor: signer,
-                escrow: escrow as Address,
-                mint: mint as Address,
+        const result = await deposit
+            .mutateAsync({
                 amount: BigInt(amount),
-                receiptSeed,
-                payer: signer,
-            },
-            { programAddress: programId as Address },
-        );
-        const txSignature = await send([ix], {
-            action: 'Deposit',
-            values: { escrow, mint, receipt, amount },
-        });
-        if (txSignature) {
-            rememberEscrow(escrow);
-            rememberMint(mint);
-            rememberReceipt(receipt);
-            onSuccess?.();
-        }
+                escrow,
+                mint,
+            })
+            .catch(() => null);
+        if (!result) return;
+
+        setGeneratedSeed(result.receiptSeed);
+        setGeneratedReceipt(result.receipt);
+        rememberEscrow(result.escrow);
+        rememberMint(result.mint);
+        rememberReceipt(result.receipt);
+        onSuccess?.();
     };
 
     return (
@@ -149,8 +121,8 @@ export function Deposit({
                     hint="Saved as the default receipt when deposit succeeds"
                 />
             )}
-            <SendButton sending={sending} label={submitLabel} />
-            <TxResult signature={signature} error={formError ?? error} />
+            <SendButton sending={deposit.isPending} label={submitLabel} />
+            <TxResult signature={deposit.data?.signature} error={formError ?? deposit.error} />
         </form>
     );
 }

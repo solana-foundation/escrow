@@ -1,12 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import type { Address } from '@solana/kit';
-import { getAllowMintInstructionAsync } from '@solana/escrow';
-import { useSendTx } from '@/hooks/useSendTx';
 import { useSavedValues } from '@/contexts/SavedValuesContext';
-import { useWallet } from '@/contexts/WalletContext';
-import { useProgramContext } from '@/contexts/ProgramContext';
+import { useEscrowMutations } from '@/hooks/use-escrow-mutations';
 import { TxResult } from '@/components/TxResult';
 import { firstValidationError, validateAddress } from '@/lib/validation';
 import { FormField, SendButton } from './shared';
@@ -26,20 +22,16 @@ export function AllowMint({
     onSuccess,
     submitLabel,
 }: AllowMintProps = {}) {
-    const { createSigner } = useWallet();
-    const { send, sending, signature, error, reset } = useSendTx();
+    const { allowMint } = useEscrowMutations();
     const { defaultEscrow, defaultMint, rememberEscrow, rememberMint } = useSavedValues();
-    const { programId } = useProgramContext();
     const [escrow, setEscrow] = useState(initialEscrow);
     const [mint, setMint] = useState(initialMint);
     const [formError, setFormError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        reset();
+        allowMint.reset();
         setFormError(null);
-        const signer = createSigner();
-        if (!signer) return;
 
         const validationError = firstValidationError(
             validateAddress(escrow, 'Escrow address'),
@@ -50,24 +42,12 @@ export function AllowMint({
             return;
         }
 
-        const ix = await getAllowMintInstructionAsync(
-            {
-                admin: signer,
-                escrow: escrow as Address,
-                mint: mint as Address,
-                payer: signer,
-            },
-            { programAddress: programId as Address },
-        );
-        const txSignature = await send([ix], {
-            action: 'Allow Mint',
-            values: { escrow, mint },
-        });
-        if (txSignature) {
-            rememberEscrow(escrow);
-            rememberMint(mint);
-            onSuccess?.();
-        }
+        const result = await allowMint.mutateAsync({ escrow, mint }).catch(() => null);
+        if (!result) return;
+
+        rememberEscrow(escrow);
+        rememberMint(mint);
+        onSuccess?.();
     };
 
     return (
@@ -99,8 +79,8 @@ export function AllowMint({
                     />
                 </>
             )}
-            <SendButton sending={sending} label={submitLabel} />
-            <TxResult signature={signature} error={formError ?? error} />
+            <SendButton sending={allowMint.isPending} label={submitLabel} />
+            <TxResult signature={allowMint.data?.signature} error={formError ?? allowMint.error} />
         </form>
     );
 }
