@@ -1,34 +1,42 @@
 'use client';
 
 import { useState } from 'react';
-import { generateKeyPairSigner, type Address } from '@solana/kit';
-import { findReceiptPda, getDepositInstructionAsync } from '@solana/escrow';
-import { useSendTx } from '@/hooks/useSendTx';
 import { useSavedValues } from '@/contexts/SavedValuesContext';
-import { useWallet } from '@/contexts/WalletContext';
-import { useProgramContext } from '@/contexts/ProgramContext';
+import { useEscrowMutations } from '@/hooks/use-escrow-mutations';
 import { TxResult } from '@/components/TxResult';
 import { firstValidationError, validateAddress, validatePositiveInteger } from '@/lib/validation';
 import { FormField, SendButton } from './shared';
 
-export function Deposit() {
-    const { createSigner } = useWallet();
-    const { send, sending, signature, error, reset } = useSendTx();
+interface DepositProps {
+    hideKnownFields?: boolean;
+    initialAmount?: string;
+    initialEscrow?: string;
+    initialMint?: string;
+    onSuccess?: () => void;
+    submitLabel?: string;
+}
+
+export function Deposit({
+    hideKnownFields = false,
+    initialAmount = '',
+    initialEscrow = '',
+    initialMint = '',
+    onSuccess,
+    submitLabel,
+}: DepositProps = {}) {
+    const { deposit } = useEscrowMutations();
     const { defaultEscrow, defaultMint, rememberEscrow, rememberMint, rememberReceipt } = useSavedValues();
-    const { programId } = useProgramContext();
-    const [escrow, setEscrow] = useState('');
-    const [mint, setMint] = useState('');
-    const [amount, setAmount] = useState('');
+    const [escrow, setEscrow] = useState(initialEscrow);
+    const [mint, setMint] = useState(initialMint);
+    const [amount, setAmount] = useState(initialAmount);
     const [generatedSeed, setGeneratedSeed] = useState('');
     const [generatedReceipt, setGeneratedReceipt] = useState('');
     const [formError, setFormError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        reset();
+        deposit.reset();
         setFormError(null);
-        const signer = createSigner();
-        if (!signer) return;
 
         const validationError = firstValidationError(
             validateAddress(escrow, 'Escrow address'),
@@ -40,40 +48,21 @@ export function Deposit() {
             return;
         }
 
-        const receiptSeed = await generateKeyPairSigner();
-        setGeneratedSeed(receiptSeed.address);
-        const signerAddress = signer.address as Address;
-        const [receipt] = await findReceiptPda(
-            {
-                escrow: escrow as Address,
-                depositor: signerAddress,
-                mint: mint as Address,
-                receiptSeed: receiptSeed.address,
-            },
-            { programAddress: programId as Address },
-        );
-        setGeneratedReceipt(receipt);
-
-        const ix = await getDepositInstructionAsync(
-            {
-                depositor: signer,
-                escrow: escrow as Address,
-                mint: mint as Address,
+        const result = await deposit
+            .mutateAsync({
                 amount: BigInt(amount),
-                receiptSeed,
-                payer: signer,
-            },
-            { programAddress: programId as Address },
-        );
-        const txSignature = await send([ix], {
-            action: 'Deposit',
-            values: { escrow, mint, receipt, amount },
-        });
-        if (txSignature) {
-            rememberEscrow(escrow);
-            rememberMint(mint);
-            rememberReceipt(receipt);
-        }
+                escrow,
+                mint,
+            })
+            .catch(() => null);
+        if (!result) return;
+
+        setGeneratedSeed(result.receiptSeed);
+        setGeneratedReceipt(result.receipt);
+        rememberEscrow(result.escrow);
+        rememberMint(result.mint);
+        rememberReceipt(result.receipt);
+        onSuccess?.();
     };
 
     return (
@@ -83,24 +72,28 @@ export function Deposit() {
             }}
             style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
         >
-            <FormField
-                label="Escrow Address"
-                value={escrow}
-                onChange={setEscrow}
-                autoFillValue={defaultEscrow}
-                onAutoFill={setEscrow}
-                placeholder="Escrow PDA address"
-                required
-            />
-            <FormField
-                label="Mint Address"
-                value={mint}
-                onChange={setMint}
-                autoFillValue={defaultMint}
-                onAutoFill={setMint}
-                placeholder="SPL token mint address"
-                required
-            />
+            {!hideKnownFields && (
+                <>
+                    <FormField
+                        label="Escrow Address"
+                        value={escrow}
+                        onChange={setEscrow}
+                        autoFillValue={defaultEscrow}
+                        onAutoFill={setEscrow}
+                        placeholder="Escrow PDA address"
+                        required
+                    />
+                    <FormField
+                        label="Mint Address"
+                        value={mint}
+                        onChange={setMint}
+                        autoFillValue={defaultMint}
+                        onAutoFill={setMint}
+                        placeholder="SPL token mint address"
+                        required
+                    />
+                </>
+            )}
             <FormField
                 label="Amount (in base units)"
                 value={amount}
@@ -128,8 +121,8 @@ export function Deposit() {
                     hint="Saved as the default receipt when deposit succeeds"
                 />
             )}
-            <SendButton sending={sending} />
-            <TxResult signature={signature} error={formError ?? error} />
+            <SendButton sending={deposit.isPending} label={submitLabel} />
+            <TxResult signature={deposit.data?.signature} error={formError ?? deposit.error} />
         </form>
     );
 }

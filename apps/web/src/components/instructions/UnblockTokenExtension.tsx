@@ -1,12 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import type { Address } from '@solana/kit';
-import { getUnblockTokenExtensionInstructionAsync } from '@solana/escrow';
-import { useSendTx } from '@/hooks/useSendTx';
 import { useSavedValues } from '@/contexts/SavedValuesContext';
-import { useWallet } from '@/contexts/WalletContext';
-import { useProgramContext } from '@/contexts/ProgramContext';
+import { useEscrowMutations } from '@/hooks/use-escrow-mutations';
 import { TxResult } from '@/components/TxResult';
 import { firstValidationError, validateAddress } from '@/lib/validation';
 import { FormField, SelectField, SendButton } from './shared';
@@ -21,21 +17,31 @@ const EXTENSION_OPTIONS = [
     { label: 'MetadataPointer (18)', value: '18' },
 ];
 
-export function UnblockTokenExtension() {
-    const { createSigner } = useWallet();
-    const { send, sending, signature, error, reset } = useSendTx();
+interface UnblockTokenExtensionProps {
+    hideKnownFields?: boolean;
+    initialEscrow?: string;
+    initialExtensionType?: string;
+    onSuccess?: () => void;
+    submitLabel?: string;
+}
+
+export function UnblockTokenExtension({
+    hideKnownFields = false,
+    initialEscrow = '',
+    initialExtensionType = '5',
+    onSuccess,
+    submitLabel,
+}: UnblockTokenExtensionProps = {}) {
+    const { unblockTokenExtension } = useEscrowMutations();
     const { defaultEscrow, rememberEscrow } = useSavedValues();
-    const { programId } = useProgramContext();
-    const [escrow, setEscrow] = useState('');
-    const [blockedExtension, setBlockedExtension] = useState('5');
+    const [escrow, setEscrow] = useState(initialEscrow);
+    const [blockedExtension, setBlockedExtension] = useState(initialExtensionType);
     const [formError, setFormError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        reset();
+        unblockTokenExtension.reset();
         setFormError(null);
-        const signer = createSigner();
-        if (!signer) return;
 
         const validationError = firstValidationError(validateAddress(escrow, 'Escrow address'));
         if (validationError) {
@@ -43,22 +49,13 @@ export function UnblockTokenExtension() {
             return;
         }
 
-        const ix = await getUnblockTokenExtensionInstructionAsync(
-            {
-                admin: signer,
-                escrow: escrow as Address,
-                blockedExtension: Number(blockedExtension),
-                payer: signer,
-            },
-            { programAddress: programId as Address },
-        );
-        const txSignature = await send([ix], {
-            action: 'Unblock Token Extension',
-            values: { escrow, extensionType: blockedExtension },
-        });
-        if (txSignature) {
-            rememberEscrow(escrow);
-        }
+        const result = await unblockTokenExtension
+            .mutateAsync({ escrow, extensionType: Number(blockedExtension) })
+            .catch(() => null);
+        if (!result) return;
+
+        rememberEscrow(escrow);
+        onSuccess?.();
     };
 
     return (
@@ -68,15 +65,17 @@ export function UnblockTokenExtension() {
             }}
             style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
         >
-            <FormField
-                label="Escrow Address"
-                value={escrow}
-                onChange={setEscrow}
-                autoFillValue={defaultEscrow}
-                onAutoFill={setEscrow}
-                placeholder="Escrow PDA address"
-                required
-            />
+            {!hideKnownFields && (
+                <FormField
+                    label="Escrow Address"
+                    value={escrow}
+                    onChange={setEscrow}
+                    autoFillValue={defaultEscrow}
+                    onAutoFill={setEscrow}
+                    placeholder="Escrow PDA address"
+                    required
+                />
+            )}
             <SelectField
                 label="Extension Type"
                 value={blockedExtension}
@@ -84,8 +83,11 @@ export function UnblockTokenExtension() {
                 options={EXTENSION_OPTIONS}
                 hint="Token-2022 extension type to remove from escrow blocked list"
             />
-            <SendButton sending={sending} />
-            <TxResult signature={signature} error={formError ?? error} />
+            <SendButton sending={unblockTokenExtension.isPending} label={submitLabel} />
+            <TxResult
+                signature={unblockTokenExtension.data?.signature}
+                error={formError ?? unblockTokenExtension.error}
+            />
         </form>
     );
 }

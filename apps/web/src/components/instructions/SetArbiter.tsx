@@ -1,31 +1,35 @@
 'use client';
 
 import { useState } from 'react';
-import type { Address } from '@solana/kit';
 import { Badge } from '@solana/design-system/badge';
-import { findExtensionsPda, getSetArbiterInstructionAsync } from '@solana/escrow';
-import { useSendTx } from '@/hooks/useSendTx';
 import { useSavedValues } from '@/contexts/SavedValuesContext';
-import { useWallet } from '@/contexts/WalletContext';
-import { useProgramContext } from '@/contexts/ProgramContext';
+import { useEscrowMutations } from '@/hooks/use-escrow-mutations';
 import { TxResult } from '@/components/TxResult';
 import { firstValidationError, validateAddress } from '@/lib/validation';
 import { FormField, SendButton } from './shared';
 
-export function SetArbiter() {
-    const { createSigner } = useWallet();
-    const { send, sending, signature, error, reset } = useSendTx();
+interface SetArbiterProps {
+    hideKnownFields?: boolean;
+    initialEscrow?: string;
+    onSuccess?: () => void;
+    submitLabel?: string;
+}
+
+export function SetArbiter({
+    hideKnownFields = false,
+    initialEscrow = '',
+    onSuccess,
+    submitLabel,
+}: SetArbiterProps = {}) {
+    const { setArbiter } = useEscrowMutations();
     const { defaultEscrow, rememberEscrow } = useSavedValues();
-    const { programId } = useProgramContext();
-    const [escrow, setEscrow] = useState('');
+    const [escrow, setEscrow] = useState(initialEscrow);
     const [formError, setFormError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        reset();
+        setArbiter.reset();
         setFormError(null);
-        const signer = createSigner();
-        if (!signer) return;
 
         const validationError = firstValidationError(validateAddress(escrow, 'Escrow address'));
         if (validationError) {
@@ -33,27 +37,11 @@ export function SetArbiter() {
             return;
         }
 
-        const [, extensionsBump] = await findExtensionsPda(
-            { escrow: escrow as Address },
-            { programAddress: programId as Address },
-        );
-        const ix = await getSetArbiterInstructionAsync(
-            {
-                admin: signer,
-                arbiter: signer,
-                escrow: escrow as Address,
-                extensionsBump,
-                payer: signer,
-            },
-            { programAddress: programId as Address },
-        );
-        const txSignature = await send([ix], {
-            action: 'Set Arbiter',
-            values: { escrow },
-        });
-        if (txSignature) {
-            rememberEscrow(escrow);
-        }
+        const result = await setArbiter.mutateAsync({ escrow }).catch(() => null);
+        if (!result) return;
+
+        rememberEscrow(escrow);
+        onSuccess?.();
     };
 
     return (
@@ -68,17 +56,19 @@ export function SetArbiter() {
                     Arbiter must co-sign with admin. This form sets your connected wallet as arbiter.
                 </Badge>
             </div>
-            <FormField
-                label="Escrow Address"
-                value={escrow}
-                onChange={setEscrow}
-                autoFillValue={defaultEscrow}
-                onAutoFill={setEscrow}
-                placeholder="Escrow PDA address"
-                required
-            />
-            <SendButton sending={sending} />
-            <TxResult signature={signature} error={formError ?? error} />
+            {!hideKnownFields && (
+                <FormField
+                    label="Escrow Address"
+                    value={escrow}
+                    onChange={setEscrow}
+                    autoFillValue={defaultEscrow}
+                    onAutoFill={setEscrow}
+                    placeholder="Escrow PDA address"
+                    required
+                />
+            )}
+            <SendButton sending={setArbiter.isPending} label={submitLabel} />
+            <TxResult signature={setArbiter.data?.signature} error={formError ?? setArbiter.error} />
         </form>
     );
 }

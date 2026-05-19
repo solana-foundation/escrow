@@ -1,31 +1,37 @@
 'use client';
 
 import { useState } from 'react';
-import type { Address } from '@solana/kit';
-import { getAddTimelockInstructionAsync } from '@solana/escrow';
-import { useSendTx } from '@/hooks/useSendTx';
 import { useSavedValues } from '@/contexts/SavedValuesContext';
-import { useWallet } from '@/contexts/WalletContext';
-import { useProgramContext } from '@/contexts/ProgramContext';
+import { useEscrowMutations } from '@/hooks/use-escrow-mutations';
 import { TxResult } from '@/components/TxResult';
 import { firstValidationError, validateAddress, validatePositiveInteger } from '@/lib/validation';
 import { FormField, SendButton } from './shared';
 
-export function AddTimelock() {
-    const { createSigner } = useWallet();
-    const { send, sending, signature, error, reset } = useSendTx();
+interface AddTimelockProps {
+    hideKnownFields?: boolean;
+    initialEscrow?: string;
+    initialLockDuration?: string;
+    onSuccess?: () => void;
+    submitLabel?: string;
+}
+
+export function AddTimelock({
+    hideKnownFields = false,
+    initialEscrow = '',
+    initialLockDuration = '',
+    onSuccess,
+    submitLabel,
+}: AddTimelockProps = {}) {
+    const { addTimelock } = useEscrowMutations();
     const { defaultEscrow, rememberEscrow } = useSavedValues();
-    const { programId } = useProgramContext();
-    const [escrow, setEscrow] = useState('');
-    const [lockDuration, setLockDuration] = useState('');
+    const [escrow, setEscrow] = useState(initialEscrow);
+    const [lockDuration, setLockDuration] = useState(initialLockDuration);
     const [formError, setFormError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        reset();
+        addTimelock.reset();
         setFormError(null);
-        const signer = createSigner();
-        if (!signer) return;
 
         const validationError = firstValidationError(
             validateAddress(escrow, 'Escrow address'),
@@ -36,22 +42,16 @@ export function AddTimelock() {
             return;
         }
 
-        const ix = await getAddTimelockInstructionAsync(
-            {
-                admin: signer,
-                escrow: escrow as Address,
+        const result = await addTimelock
+            .mutateAsync({
+                escrow,
                 lockDuration: BigInt(lockDuration),
-                payer: signer,
-            },
-            { programAddress: programId as Address },
-        );
-        const txSignature = await send([ix], {
-            action: 'Add Timelock',
-            values: { escrow, lockDuration },
-        });
-        if (txSignature) {
-            rememberEscrow(escrow);
-        }
+            })
+            .catch(() => null);
+        if (!result) return;
+
+        rememberEscrow(escrow);
+        onSuccess?.();
     };
 
     return (
@@ -61,15 +61,17 @@ export function AddTimelock() {
             }}
             style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
         >
-            <FormField
-                label="Escrow Address"
-                value={escrow}
-                onChange={setEscrow}
-                autoFillValue={defaultEscrow}
-                onAutoFill={setEscrow}
-                placeholder="Escrow PDA address"
-                required
-            />
+            {!hideKnownFields && (
+                <FormField
+                    label="Escrow Address"
+                    value={escrow}
+                    onChange={setEscrow}
+                    autoFillValue={defaultEscrow}
+                    onAutoFill={setEscrow}
+                    placeholder="Escrow PDA address"
+                    required
+                />
+            )}
             <FormField
                 label="Lock Duration (seconds)"
                 value={lockDuration}
@@ -78,8 +80,8 @@ export function AddTimelock() {
                 type="number"
                 required
             />
-            <SendButton sending={sending} />
-            <TxResult signature={signature} error={formError ?? error} />
+            <SendButton sending={addTimelock.isPending} label={submitLabel} />
+            <TxResult signature={addTimelock.data?.signature} error={formError ?? addTimelock.error} />
         </form>
     );
 }

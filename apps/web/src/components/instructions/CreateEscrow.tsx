@@ -1,52 +1,35 @@
 'use client';
 
 import { useState } from 'react';
-import { generateKeyPairSigner, type Address } from '@solana/kit';
-import { findEscrowPda, getCreatesEscrowInstructionAsync } from '@solana/escrow';
-import { useSendTx } from '@/hooks/useSendTx';
 import { useSavedValues } from '@/contexts/SavedValuesContext';
 import { useWallet } from '@/contexts/WalletContext';
-import { useProgramContext } from '@/contexts/ProgramContext';
+import { useEscrowMutations } from '@/hooks/use-escrow-mutations';
 import { TxResult } from '@/components/TxResult';
 import { FormField, SendButton } from './shared';
 
-export function CreateEscrow() {
-    const { account, createSigner } = useWallet();
-    const { send, sending, signature, error, reset } = useSendTx();
+interface CreateEscrowProps {
+    onSuccess?: () => void;
+    submitLabel?: string;
+}
+
+export function CreateEscrow({ onSuccess, submitLabel }: CreateEscrowProps = {}) {
+    const { account } = useWallet();
+    const { createEscrow } = useEscrowMutations();
     const { rememberEscrow } = useSavedValues();
-    const { programId } = useProgramContext();
     const [generatedSeed, setGeneratedSeed] = useState('');
     const [generatedEscrow, setGeneratedEscrow] = useState('');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        reset();
-        const signer = createSigner();
-        if (!signer) return;
+        createEscrow.reset();
 
-        const escrowSeed = await generateKeyPairSigner();
-        setGeneratedSeed(escrowSeed.address);
-        const [escrow] = await findEscrowPda(
-            { escrowSeed: escrowSeed.address },
-            { programAddress: programId as Address },
-        );
-        setGeneratedEscrow(escrow);
+        const result = await createEscrow.mutateAsync().catch(() => null);
+        if (!result) return;
 
-        const ix = await getCreatesEscrowInstructionAsync(
-            {
-                admin: signer,
-                escrowSeed,
-                payer: signer,
-            },
-            { programAddress: programId as Address },
-        );
-        const txSignature = await send([ix], {
-            action: 'Create Escrow',
-            values: { escrow },
-        });
-        if (txSignature) {
-            rememberEscrow(escrow);
-        }
+        setGeneratedSeed(result.seed);
+        setGeneratedEscrow(result.escrow);
+        rememberEscrow(result.escrow);
+        onSuccess?.();
     };
 
     return (
@@ -82,8 +65,8 @@ export function CreateEscrow() {
                     hint="Saved as the default escrow when creation succeeds"
                 />
             )}
-            <SendButton sending={sending} />
-            <TxResult signature={signature} error={error} />
+            <SendButton sending={createEscrow.isPending} label={submitLabel} />
+            <TxResult signature={createEscrow.data?.signature} error={createEscrow.error} />
         </form>
     );
 }
