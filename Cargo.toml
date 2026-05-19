@@ -11,6 +11,9 @@ resolver = "2"
 version = "0.0.1"
 edition = "2021"
 
+[workspace.metadata.cli]
+solana = "3.1.10"
+
 [workspace.lints.rust]
 unused_imports = "deny"
 dead_code = "warn"

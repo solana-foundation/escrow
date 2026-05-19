@@ -48,7 +48,7 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           rust-cache-key: 'release-${{ inputs.network }}'
-          solana-version: 'stable'
+          solana-version: 'v4.0.0'
 
       - name: Install solana-verify
         run: cargo install solana-verify --locked
