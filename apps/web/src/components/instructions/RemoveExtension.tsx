@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { Address } from '@solana/kit';
-import { getRemoveExtensionInstructionAsync } from '@solana/escrow-program-client';
+import { getRemoveExtensionInstructionAsync } from '@solana/escrow';
 import { useSendTx } from '@/hooks/useSendTx';
 import { useSavedValues } from '@/contexts/SavedValuesContext';
 import { useWallet } from '@/contexts/WalletContext';

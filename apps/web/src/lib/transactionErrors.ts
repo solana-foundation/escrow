@@ -18,7 +18,7 @@ import {
     ESCROW_PROGRAM_ERROR__TOKEN_EXTENSION_ALREADY_BLOCKED,
     ESCROW_PROGRAM_ERROR__TOKEN_EXTENSION_NOT_BLOCKED,
     ESCROW_PROGRAM_ERROR__ZERO_DEPOSIT_AMOUNT,
-} from '@solana/escrow-program-client';
+} from '@solana/escrow';
 
 const ESCROW_PROGRAM_ERROR_MESSAGES: Record<number, string> = {
     [ESCROW_PROGRAM_ERROR__INVALID_ESCROW_ID]: 'Escrow ID invalid or does not respect rules',

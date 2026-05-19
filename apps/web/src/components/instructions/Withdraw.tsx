@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { AccountRole, type Address, fetchEncodedAccount, createSolanaRpc, getAddressDecoder } from '@solana/kit';
-import { findExtensionsPda, getWithdrawInstructionAsync } from '@solana/escrow-program-client';
+import { findExtensionsPda, getWithdrawInstructionAsync } from '@solana/escrow';
 import { useSendTx } from '@/hooks/useSendTx';
 import { useSavedValues } from '@/contexts/SavedValuesContext';
 import { useWallet } from '@/contexts/WalletContext';

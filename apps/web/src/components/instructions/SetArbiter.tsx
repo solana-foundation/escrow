@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import type { Address } from '@solana/kit';
 import { Badge } from '@solana/design-system/badge';
-import { findExtensionsPda, getSetArbiterInstructionAsync } from '@solana/escrow-program-client';
+import { findExtensionsPda, getSetArbiterInstructionAsync } from '@solana/escrow';
 import { useSendTx } from '@/hooks/useSendTx';
 import { useSavedValues } from '@/contexts/SavedValuesContext';
 import { useWallet } from '@/contexts/WalletContext';

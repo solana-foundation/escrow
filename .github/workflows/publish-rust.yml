@@ -16,19 +16,40 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 concurrency:
   group: rust-client-publish
   cancel-in-progress: false
 
 jobs:
+  guard-allowed-branch:
+    name: Guard allowed source branch for release publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Guard allowed source branch for release publish
+        run: |
+          case "${{ github.ref }}" in
+            refs/heads/main|refs/heads/hotfix/*) ;;
+            *)
+              echo "::error::Publish Rust Client must be run from main or hotfix/*. Current ref: ${{ github.ref }}"
+              exit 1
+              ;;
+          esac
+
   test:
+    name: Run release tests
+    needs: guard-allowed-branch
     uses: ./.github/workflows/test.yml
+    secrets: inherit
 
   publish:
-    name: Publish Rust Client
+    name: Publish escrow crate
     runs-on: ubuntu-latest
-    needs: [test]
+    needs: [guard-allowed-branch, test]
+    defaults:
+      run:
+        working-directory: clients/rust
     steps:
       - uses: actions/checkout@v6
         with:
@@ -36,20 +57,59 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Git user
+        working-directory: .
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - uses: dtolnay/rust-toolchain@master
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: '1.92'
+          components: rustfmt, clippy
 
-      - name: Get version
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        working-directory: .
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate IDL and clients
+        working-directory: .
+        run: |
+          cd program && cargo build
+          cd .. && pnpm run generate-clients
+
+      - name: Build check
+        run: cargo build
+
+      - name: Verify crate package
+        run: cargo publish --dry-run --locked --allow-dirty
+
+      - name: Get current version
         id: version
         run: |
-          VERSION=$(grep "^version" clients/rust/Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+          VERSION=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "escrow") | .version')
+          if [ -z "$VERSION" ]; then
+            echo "::error::Could not find escrow crate version"
+            exit 1
+          fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "📦 Publishing version: $VERSION"
+          echo "Publishing escrow v$VERSION"
+
+      - name: Check crates.io version availability
+        if: ${{ inputs.publish-to-crates }}
+        run: |
+          REGISTRY_CHECK_DIR="${RUNNER_TEMP:-/tmp}"
+          if (cd "$REGISTRY_CHECK_DIR" && cargo info "escrow@${{ steps.version.outputs.version }}" >/dev/null 2>&1); then
+            echo "::error::escrow v${{ steps.version.outputs.version }} already exists on crates.io. Bump clients/rust/Cargo.toml before publishing."
+            exit 1
+          fi
 
       - name: Check if prerelease
         id: prerelease
@@ -60,31 +120,32 @@ jobs:
             echo "is_prerelease=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Build check
-        run: cd clients/rust && cargo build
-
-      - name: Create and push tag
-        run: |
-          TAG="rust-client-v${{ steps.version.outputs.version }}"
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "⏭️ Tag $TAG already exists, skipping"
-          else
-            git tag "$TAG"
-            echo "✅ Created tag $TAG"
-          fi
-          git push origin "$TAG" 2>/dev/null || echo "⏭️ Tag already pushed"
+      - name: Authenticate crates.io trusted publisher
+        if: ${{ inputs.publish-to-crates }}
+        id: crates_io_auth
+        uses: rust-lang/crates-io-auth-action@bbd81622f20ce9e2dd9622e3218b975523e45bbe # v1.0.4
 
       - name: Publish to crates.io
         if: ${{ inputs.publish-to-crates }}
-        run: |
-          echo "📦 Publishing escrow-program-client@${{ steps.version.outputs.version }} to crates.io..."
-          cd clients/rust && cargo publish --locked
         env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          CARGO_REGISTRY_TOKEN: ${{ steps.crates_io_auth.outputs.token }}
+        run: cargo publish --locked --allow-dirty
+
+      - name: Create and push tag
+        working-directory: .
+        run: |
+          TAG="rust-client-v${{ steps.version.outputs.version }}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists, skipping"
+          else
+            git tag "$TAG"
+            echo "Created tag $TAG"
+          fi
+          git push origin "$TAG" 2>/dev/null || echo "Tag already pushed"
 
       - name: Create GitHub Release
         if: ${{ inputs.create-github-release }}
-        uses: actions/github-script@v9
+        uses: actions/github-script@v8
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -98,7 +159,7 @@ jobs:
                 repo: context.repo.repo,
                 tag: tagName,
               });
-              console.log(`⏭️ Release ${tagName} already exists`);
+              console.log(`Release ${tagName} already exists, skipping`);
               return;
             } catch (e) {
               if (e.status !== 404) throw e;
@@ -109,19 +170,20 @@ jobs:
               repo: context.repo.repo,
               tag_name: tagName,
               name: releaseName,
-              body: `Release of escrow-program-client v${{ steps.version.outputs.version }}`,
+              body: `Release of escrow v${{ steps.version.outputs.version }}\n\n**crates.io:** https://crates.io/crates/escrow/${{ steps.version.outputs.version }}`,
               draft: false,
               prerelease: isPrerelease,
             });
 
       - name: Publish summary
         run: |
-          echo "## 🎉 Rust Client Published" >> $GITHUB_STEP_SUMMARY
+          echo "## escrow Published" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Version**: \`${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Crate**: \`escrow-program-client\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag**: \`rust-client-v${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           if [ "${{ inputs.publish-to-crates }}" == "true" ]; then
-            echo "✅ Published to crates.io" >> $GITHUB_STEP_SUMMARY
+            echo "Published to crates.io: https://crates.io/crates/escrow/${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           else
-            echo "⏭️ Skipped crates.io publish" >> $GITHUB_STEP_SUMMARY
+            echo "Skipped crates.io publish" >> $GITHUB_STEP_SUMMARY
           fi

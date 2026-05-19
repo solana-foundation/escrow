@@ -1,17 +1,19 @@
 [package]
-name = "escrow-program-client"
+name = "escrow"
 version = "0.0.1"
 edition = "2021"
-description = "Rust client for the Escrow Program"
+description = "Rust client for the Escrow Solana program"
 license = "MIT"
 repository = "https://github.com/solana-program/escrow"
+readme = "../../README.md"
+include = ["Cargo.toml", "../../README.md", "src/**/*.rs"]
 
 [dependencies]
 borsh = { workspace = true, features = ["derive"] }
 solana-account-info = "3.1.1"
 solana-pubkey = "4.2.0"
 solana-address = { version = "2.6.0", features = ["borsh", "copy", "curve25519", "decode"] }
-solana-instruction = "3.1.0"
+solana-instruction = { version = "3.1.0", features = ["borsh"] }
 solana-cpi = "3.0.1"
 num-derive = { workspace = true }
 num-traits = { workspace = true }

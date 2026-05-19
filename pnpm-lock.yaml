@@ -130,7 +130,7 @@ importers:
       '@solana/design-system':
         specifier: ^1.0.1
         version: 1.0.1(@base-ui/react@1.4.1(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(motion@12.38.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(tailwindcss@4.3.0)
-      '@solana/escrow-program-client':
+      '@solana/escrow':
         specifier: workspace:*
         version: link:../../clients/typescript
       '@solana/kit':
@@ -195,7 +195,7 @@ importers:
   clients/typescript:
     dependencies:
       '@solana/kit':
-        specifier: ^6.4.0
+        specifier: ^6.9.0
         version: 6.9.0(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@6.0.6)
       '@solana/program-client-core':
         specifier: ^6.4.0
@@ -212,7 +212,7 @@ importers:
       '@solana-program/token':
         specifier: ^0.13.0
         version: 0.13.0(@solana/kit@6.9.0(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@6.0.6))
-      '@solana/escrow-program-client':
+      '@solana/escrow':
         specifier: workspace:*
         version: link:../../../clients/typescript
       '@solana/kit':

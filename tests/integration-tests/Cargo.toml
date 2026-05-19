@@ -8,7 +8,7 @@ workspace = true
 
 [dependencies]
 litesvm = "^0.11.0"
-escrow-program-client = { path = "../../clients/rust", features = [
+escrow-program-client = { package = "escrow", path = "../../clients/rust", features = [
     "fetch",
 ], default-features = false }
 solana-sdk = "3.0.0"

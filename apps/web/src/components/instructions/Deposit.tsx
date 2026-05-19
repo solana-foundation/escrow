@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { generateKeyPairSigner, type Address } from '@solana/kit';
-import { findReceiptPda, getDepositInstructionAsync } from '@solana/escrow-program-client';
+import { findReceiptPda, getDepositInstructionAsync } from '@solana/escrow';
 import { useSendTx } from '@/hooks/useSendTx';
 import { useSavedValues } from '@/contexts/SavedValuesContext';
 import { useWallet } from '@/contexts/WalletContext';
