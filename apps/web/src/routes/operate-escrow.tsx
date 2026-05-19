@@ -3,7 +3,6 @@ import { Link } from 'react-router';
 import { Badge, Button } from '@solana/design-system';
 import { ArrowRightLeft, Clock3, Coins, FileText, Plus, RefreshCw, ShieldCheck, WalletCards } from 'lucide-react';
 
-import { QuickDefaults } from '@/components/QuickDefaults';
 import { RecentTransactions } from '@/components/RecentTransactions';
 import { Deposit } from '@/components/instructions/Deposit';
 import { Withdraw } from '@/components/instructions/Withdraw';
@@ -303,7 +302,6 @@ export function OperateEscrowRoute() {
                         <WalletButton />
                     </CardContent>
                 </Card>
-                <QuickDefaults />
             </div>
         );
     }
@@ -427,7 +425,6 @@ export function OperateEscrowRoute() {
                 onSuccess={() => void dashboard.refetch()}
                 open={manualWithdrawOpen}
             />
-            <QuickDefaults />
             <RecentTransactions />
         </div>
     );

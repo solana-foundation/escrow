@@ -13,11 +13,9 @@ import {
     ShieldCheck,
     SlidersHorizontal,
     Undo2,
-    UserCheck,
     Webhook,
 } from 'lucide-react';
 
-import { QuickDefaults } from '@/components/QuickDefaults';
 import { RecentTransactions } from '@/components/RecentTransactions';
 import { WalletButton } from '@/components/solana/solana-provider';
 import { AddTimelock } from '@/components/instructions/AddTimelock';
@@ -29,7 +27,6 @@ import { SetArbiter } from '@/components/instructions/SetArbiter';
 import { SetHook } from '@/components/instructions/SetHook';
 import { SetImmutable } from '@/components/instructions/SetImmutable';
 import { UnblockTokenExtension } from '@/components/instructions/UnblockTokenExtension';
-import { UpdateAdmin } from '@/components/instructions/UpdateAdmin';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Dialog,
@@ -60,8 +57,7 @@ type ManageAction =
     | 'set-arbiter'
     | 'set-hook'
     | 'set-immutable'
-    | 'unblock-token-extension'
-    | 'update-admin';
+    | 'unblock-token-extension';
 
 type DialogStep = 'confirm' | 'form';
 
@@ -75,7 +71,6 @@ const ACTION_LABELS: Record<ManageAction, string> = {
     'set-hook': 'Set Hook',
     'set-immutable': 'Set Immutable',
     'unblock-token-extension': 'Unblock Token Extension',
-    'update-admin': 'Update Admin',
 };
 
 function actionDescription(action: ManageAction) {
@@ -87,8 +82,7 @@ function actionDescription(action: ManageAction) {
     if (action === 'block-token-extension') return 'Block a Token-2022 extension from future deposits.';
     if (action === 'unblock-token-extension') return 'Remove an extension from the blocked list.';
     if (action === 'remove-extension') return 'Remove a configured escrow extension.';
-    if (action === 'set-immutable') return 'Permanently lock escrow configuration.';
-    return 'Update the admin authority using your connected wallet.';
+    return 'Permanently lock escrow configuration.';
 }
 
 function formatDuration(seconds: bigint) {
@@ -228,8 +222,6 @@ function ManageDialog({
             submitLabel: title,
         };
 
-        if (action === 'update-admin')
-            return <UpdateAdmin key={`${escrow.address}-update-admin`} hideKnownFields {...props} />;
         if (action === 'set-immutable')
             return <SetImmutable key={`${escrow.address}-immutable`} hideKnownFields {...props} />;
         if (action === 'allow-mint') return <AllowMint key={`${escrow.address}-allow-mint`} {...props} />;
@@ -367,15 +359,6 @@ function EscrowCard({
                     </div>
 
                     <div className="flex flex-wrap gap-2">
-                        <Button
-                            type="button"
-                            size="sm"
-                            variant="secondary"
-                            iconLeft={<UserCheck />}
-                            onClick={() => setAction('update-admin')}
-                        >
-                            Update Admin
-                        </Button>
                         <Button
                             type="button"
                             size="sm"
@@ -520,7 +503,6 @@ export function ManageEscrowRoute() {
                         <WalletButton />
                     </CardContent>
                 </Card>
-                <QuickDefaults />
             </div>
         );
     }
@@ -577,7 +559,6 @@ export function ManageEscrowRoute() {
                 </CardContent>
             </Card>
 
-            <QuickDefaults />
             <RecentTransactions />
         </div>
     );

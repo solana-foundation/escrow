@@ -1,4 +1,3 @@
-import { QuickDefaults } from '@/components/QuickDefaults';
 import { RecentTransactions } from '@/components/RecentTransactions';
 import { AddTimelock } from '@/components/instructions/AddTimelock';
 import { AllowMint } from '@/components/instructions/AllowMint';
@@ -15,7 +14,6 @@ export function CreateEscrowRoute() {
             <div>
                 <h1 className="text-2xl font-semibold tracking-tight text-foreground">Create Escrow</h1>
             </div>
-            <QuickDefaults />
             <RecentTransactions />
             <div className="grid gap-4 lg:grid-cols-2">
                 <InstructionPanel title="Create Escrow">

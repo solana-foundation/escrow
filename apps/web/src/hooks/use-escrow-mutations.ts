@@ -13,7 +13,6 @@ import {
     getSetHookInstructionAsync,
     getSetImmutableInstruction,
     getUnblockTokenExtensionInstructionAsync,
-    getUpdateAdminInstruction,
     getWithdrawInstructionAsync,
 } from '@solana/escrow';
 import {
@@ -370,26 +369,6 @@ export function useEscrowMutations() {
         onSuccess,
     });
 
-    const updateAdmin = useMutation({
-        mutationFn: async (input: EscrowInput): Promise<EscrowMutationResult> => {
-            const txSigner = requireSigner();
-            const programAddress = getProgramAddress(programId);
-            const escrow = input.escrow.trim();
-            const instruction = getUpdateAdminInstruction(
-                {
-                    admin: txSigner,
-                    escrow: asAddress(escrow),
-                    newAdmin: txSigner,
-                },
-                { programAddress },
-            );
-            const signature = await sendEscrowTransaction([instruction], txSigner, 'Update Admin', { escrow });
-            return { signature };
-        },
-        onError,
-        onSuccess,
-    });
-
     const setImmutable = useMutation({
         mutationFn: async (input: EscrowInput): Promise<EscrowMutationResult> => {
             const txSigner = requireSigner();
@@ -567,7 +546,6 @@ export function useEscrowMutations() {
         setHook,
         setImmutable,
         unblockTokenExtension,
-        updateAdmin,
         withdraw,
     };
 }
