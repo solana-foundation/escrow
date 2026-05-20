@@ -15,6 +15,7 @@ export interface RecentTransactionValues {
     lockDuration?: string;
     hookProgram?: string;
     rentRecipient?: string;
+    tokenProgram?: string;
 }
 
 export interface RecentTransaction {

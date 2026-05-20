@@ -19,6 +19,12 @@ import {
     ESCROW_PROGRAM_ERROR__TOKEN_EXTENSION_NOT_BLOCKED,
     ESCROW_PROGRAM_ERROR__ZERO_DEPOSIT_AMOUNT,
 } from '@solana/escrow';
+import {
+    isSolanaError,
+    SOLANA_ERROR__INSTRUCTION_ERROR__CUSTOM,
+    SOLANA_ERROR__JSON_RPC__SERVER_ERROR_SEND_TRANSACTION_PREFLIGHT_FAILURE,
+    unwrapSimulationError,
+} from '@solana/kit';
 
 const ESCROW_PROGRAM_ERROR_MESSAGES: Record<number, string> = {
     [ESCROW_PROGRAM_ERROR__INVALID_ESCROW_ID]: 'Escrow ID invalid or does not respect rules',
@@ -41,11 +47,28 @@ const ESCROW_PROGRAM_ERROR_MESSAGES: Record<number, string> = {
 };
 
 const FALLBACK_TX_FAILED_MESSAGE = 'Transaction failed';
+const MAX_LOG_LINES = 12;
+
+export interface TransactionErrorDetails {
+    readonly logs: readonly string[];
+    readonly message: string;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null;
+}
 
 function getErrorMessage(error: unknown): string {
-    if (error instanceof Error) return error.message;
     if (typeof error === 'string') return error;
+    if (error instanceof Error) return error.message;
+    if (isRecord(error) && typeof error.message === 'string') return error.message;
     return '';
+}
+
+function getErrorCause(error: unknown): unknown {
+    if (error instanceof Error) return error.cause;
+    if (isRecord(error)) return error.cause;
+    return undefined;
 }
 
 function tryDecodePayload(payload: string): string | null {
@@ -93,17 +116,56 @@ function parseCustomProgramCodeFromString(message: string): number | null {
     return null;
 }
 
-function parseCustomProgramCode(error: unknown): number | null {
-    if (error && typeof error === 'object') {
-        const withContext = error as { context?: { code?: unknown } };
-        if (typeof withContext.context?.code === 'number') {
-            return withContext.context.code;
+function parseInstructionErrorCode(value: unknown): number | null {
+    if (!Array.isArray(value) || value.length < 2) return null;
+
+    const instructionError = value[1];
+    if (isRecord(instructionError) && typeof instructionError.Custom === 'number') return instructionError.Custom;
+    return null;
+}
+
+function parseCustomProgramCode(error: unknown, visited = new Set<object>()): number | null {
+    if (isRecord(error)) {
+        if (visited.has(error)) return null;
+        visited.add(error);
+    }
+
+    const simulationCause = unwrapSimulationError(error);
+    if (simulationCause !== error) {
+        const simulationCode = parseCustomProgramCode(simulationCause, visited);
+        if (simulationCode !== null) return simulationCode;
+    }
+
+    if (isSolanaError(error, SOLANA_ERROR__INSTRUCTION_ERROR__CUSTOM)) {
+        return error.context.code;
+    }
+
+    if (isRecord(error)) {
+        const context = error.context;
+        if (isRecord(context) && typeof context.code === 'number') return context.code;
+
+        const directInstructionErrorCode = parseInstructionErrorCode(error.InstructionError);
+        if (directInstructionErrorCode !== null) return directInstructionErrorCode;
+
+        const err = error.err;
+        if (isRecord(err)) {
+            const errInstructionErrorCode = parseInstructionErrorCode(err.InstructionError);
+            if (errInstructionErrorCode !== null) return errInstructionErrorCode;
+        }
+
+        const data = error.data;
+        if (isRecord(data)) {
+            const dataInstructionErrorCode = parseCustomProgramCode(data, visited);
+            if (dataInstructionErrorCode !== null) return dataInstructionErrorCode;
         }
     }
 
     const message = getErrorMessage(error);
-    if (!message) return null;
-    return parseCustomProgramCodeFromString(message);
+    const parsedMessageCode = message ? parseCustomProgramCodeFromString(message) : null;
+    if (parsedMessageCode !== null) return parsedMessageCode;
+
+    const cause = getErrorCause(error);
+    return cause === undefined ? null : parseCustomProgramCode(cause, visited);
 }
 
 function getEscrowProgramErrorMessage(code: number | null): string | null {
@@ -111,29 +173,114 @@ function getEscrowProgramErrorMessage(code: number | null): string | null {
     return ESCROW_PROGRAM_ERROR_MESSAGES[code] ?? null;
 }
 
-export function formatTransactionError(error: unknown): string {
-    const message = getErrorMessage(error);
+function normalizeLogs(value: unknown): readonly string[] {
+    if (!Array.isArray(value)) return [];
+    return value.filter((line): line is string => typeof line === 'string' && line.trim().length > 0);
+}
+
+function collectLogs(error: unknown, visited = new Set<object>()): readonly string[] {
+    const logs: string[] = [];
+
+    if (isRecord(error)) {
+        if (visited.has(error)) return [];
+        visited.add(error);
+
+        if (isSolanaError(error, SOLANA_ERROR__JSON_RPC__SERVER_ERROR_SEND_TRANSACTION_PREFLIGHT_FAILURE)) {
+            logs.push(...normalizeLogs(error.context.logs));
+        }
+
+        logs.push(...normalizeLogs(error.logs));
+
+        const context = error.context;
+        if (isRecord(context)) logs.push(...normalizeLogs(context.logs));
+
+        const data = error.data;
+        if (isRecord(data)) logs.push(...normalizeLogs(data.logs));
+    }
+
+    const simulationCause = unwrapSimulationError(error);
+    if (simulationCause !== error) logs.push(...collectLogs(simulationCause, visited));
+
+    const cause = getErrorCause(error);
+    if (cause !== undefined) logs.push(...collectLogs(cause, visited));
+
+    return [...new Set(logs)];
+}
+
+function isPreflightFailure(error: unknown, visited = new Set<object>()): boolean {
+    if (isRecord(error)) {
+        if (visited.has(error)) return false;
+        visited.add(error);
+    }
+
+    if (isSolanaError(error, SOLANA_ERROR__JSON_RPC__SERVER_ERROR_SEND_TRANSACTION_PREFLIGHT_FAILURE)) {
+        return true;
+    }
+
+    const cause = getErrorCause(error);
+    return cause === undefined ? false : isPreflightFailure(cause, visited);
+}
+
+export function getTransactionErrorDetails(error: unknown): TransactionErrorDetails {
+    const message = getErrorMessage(error).trim();
+    const escrowMessage = getEscrowProgramErrorMessage(parseCustomProgramCode(error));
+
+    if (escrowMessage) {
+        return {
+            logs: collectLogs(error),
+            message: `${FALLBACK_TX_FAILED_MESSAGE}: ${escrowMessage}`,
+        };
+    }
+
+    if (/user rejected|rejected the request|declined|cancelled/i.test(message)) {
+        return {
+            logs: [],
+            message: 'Transaction was rejected in wallet',
+        };
+    }
+
+    if (/request.*pending|already pending/i.test(message)) {
+        return {
+            logs: [],
+            message: `${FALLBACK_TX_FAILED_MESSAGE}: request is already pending in your wallet`,
+        };
+    }
+
+    if (isPreflightFailure(error)) {
+        return {
+            logs: collectLogs(error),
+            message: `${FALLBACK_TX_FAILED_MESSAGE}: transaction simulation failed`,
+        };
+    }
 
     if (
         message === FALLBACK_TX_FAILED_MESSAGE ||
         message.startsWith(`${FALLBACK_TX_FAILED_MESSAGE}:`) ||
         message === 'Transaction was rejected in wallet'
     ) {
-        return message;
+        return {
+            logs: collectLogs(error),
+            message,
+        };
     }
 
-    const escrowMessage = getEscrowProgramErrorMessage(parseCustomProgramCode(error));
-    if (escrowMessage) {
-        return `${FALLBACK_TX_FAILED_MESSAGE}: ${escrowMessage}`;
-    }
+    return {
+        logs: collectLogs(error),
+        message: message ? `${FALLBACK_TX_FAILED_MESSAGE}: ${message}` : FALLBACK_TX_FAILED_MESSAGE,
+    };
+}
 
-    if (message.includes('-32002')) {
-        return `${FALLBACK_TX_FAILED_MESSAGE}: request is already pending in your wallet`;
-    }
+export function formatTransactionError(error: unknown): string {
+    return getTransactionErrorDetails(error).message;
+}
 
-    if (/user rejected|rejected the request|declined|cancelled/i.test(message)) {
-        return 'Transaction was rejected in wallet';
-    }
+export function formatTransactionErrorWithLogs(error: unknown): string {
+    const { logs, message } = getTransactionErrorDetails(error);
+    if (logs.length === 0) return message;
 
-    return FALLBACK_TX_FAILED_MESSAGE;
+    const visibleLogs = logs.slice(-MAX_LOG_LINES);
+    const omittedCount = logs.length - visibleLogs.length;
+    const omittedLine = omittedCount > 0 ? [`... ${omittedCount} earlier log lines omitted`] : [];
+
+    return [message, '', 'Logs:', ...omittedLine, ...visibleLogs].join('\n');
 }

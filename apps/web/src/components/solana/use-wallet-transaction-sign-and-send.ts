@@ -37,7 +37,6 @@ export function useWalletTransactionSignAndSend() {
 
             await sendAndConfirm(signedTx, {
                 commitment: 'confirmed',
-                skipPreflight: true,
             });
 
             return signature;

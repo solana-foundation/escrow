@@ -3,8 +3,14 @@
 import { useState } from 'react';
 import { useSavedValues } from '@/contexts/SavedValuesContext';
 import { useEscrowMutations } from '@/hooks/use-escrow-mutations';
+import { useTokenFormDefaults } from '@/hooks/use-token-form-defaults';
 import { TxResult } from '@/components/TxResult';
-import { firstValidationError, validateAddress, validatePositiveInteger } from '@/lib/validation';
+import {
+    firstValidationError,
+    validateAddress,
+    validateOptionalAddress,
+    validatePositiveInteger,
+} from '@/lib/validation';
 import { FormField, SendButton } from './shared';
 
 interface DepositProps {
@@ -27,7 +33,7 @@ export function Deposit({
     const { deposit } = useEscrowMutations();
     const { defaultEscrow, defaultMint, rememberEscrow, rememberMint, rememberReceipt } = useSavedValues();
     const [escrow, setEscrow] = useState(initialEscrow);
-    const [mint, setMint] = useState(initialMint);
+    const { clusterMint, mint, setMint, setTokenProgram, tokenProgram } = useTokenFormDefaults(initialMint);
     const [amount, setAmount] = useState(initialAmount);
     const [generatedSeed, setGeneratedSeed] = useState('');
     const [generatedReceipt, setGeneratedReceipt] = useState('');
@@ -42,6 +48,7 @@ export function Deposit({
             validateAddress(escrow, 'Escrow address'),
             validateAddress(mint, 'Mint address'),
             validatePositiveInteger(amount, 'Amount'),
+            validateOptionalAddress(tokenProgram, 'Token program'),
         );
         if (validationError) {
             setFormError(validationError);
@@ -53,6 +60,7 @@ export function Deposit({
                 amount: BigInt(amount),
                 escrow,
                 mint,
+                tokenProgram,
             })
             .catch(() => null);
         if (!result) return;
@@ -87,7 +95,7 @@ export function Deposit({
                         label="Mint Address"
                         value={mint}
                         onChange={setMint}
-                        autoFillValue={defaultMint}
+                        autoFillValue={defaultMint || clusterMint}
                         onAutoFill={setMint}
                         placeholder="SPL token mint address"
                         required
@@ -102,6 +110,13 @@ export function Deposit({
                 type="number"
                 hint="Amount in smallest token units (no decimals)"
                 required
+            />
+            <FormField
+                label="Token Program"
+                value={tokenProgram}
+                onChange={setTokenProgram}
+                placeholder="Token program address"
+                hint="Use Token-2022 program address for Token-2022 mints"
             />
             {generatedSeed && (
                 <FormField
