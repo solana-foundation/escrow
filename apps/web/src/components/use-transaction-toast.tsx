@@ -5,7 +5,7 @@ import { getClusterFromClusterId, getSolanaExplorerUrl } from '@/lib/explorer';
 import { formatTransactionError } from '@/lib/transactionErrors';
 
 function errorMessage(error: unknown): string {
-    return error instanceof Error ? error.message : formatTransactionError(error);
+    return formatTransactionError(error);
 }
 
 export function useTransactionToast() {

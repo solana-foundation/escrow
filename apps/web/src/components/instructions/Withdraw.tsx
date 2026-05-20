@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useSavedValues } from '@/contexts/SavedValuesContext';
 import { useWallet } from '@/contexts/WalletContext';
 import { useEscrowMutations } from '@/hooks/use-escrow-mutations';
+import { useTokenFormDefaults } from '@/hooks/use-token-form-defaults';
 import { TxResult } from '@/components/TxResult';
 import { firstValidationError, validateAddress, validateOptionalAddress } from '@/lib/validation';
 import { FormField, SendButton } from './shared';
@@ -32,7 +33,7 @@ export function Withdraw({
     const { defaultEscrow, defaultMint, defaultReceipt, rememberEscrow, rememberMint, rememberReceipt } =
         useSavedValues();
     const [escrow, setEscrow] = useState(initialEscrow);
-    const [mint, setMint] = useState(initialMint);
+    const { clusterMint, mint, setMint, setTokenProgram, tokenProgram } = useTokenFormDefaults(initialMint);
     const [receipt, setReceipt] = useState(initialReceipt);
     const [rentRecipient, setRentRecipient] = useState(initialRentRecipient);
     const [formError, setFormError] = useState<string | null>(null);
@@ -47,6 +48,7 @@ export function Withdraw({
             validateAddress(mint, 'Mint address'),
             validateAddress(receipt, 'Receipt address'),
             validateOptionalAddress(rentRecipient, 'Rent recipient'),
+            validateOptionalAddress(tokenProgram, 'Token program'),
         );
         if (validationError) {
             setFormError(validationError);
@@ -59,6 +61,7 @@ export function Withdraw({
                 mint,
                 receipt,
                 rentRecipient,
+                tokenProgram,
             })
             .catch(() => null);
         if (!result) return;
@@ -91,7 +94,7 @@ export function Withdraw({
                         label="Mint Address"
                         value={mint}
                         onChange={setMint}
-                        autoFillValue={defaultMint}
+                        autoFillValue={defaultMint || clusterMint}
                         onAutoFill={setMint}
                         placeholder="SPL token mint address"
                         required
@@ -114,6 +117,13 @@ export function Withdraw({
                 onChange={setRentRecipient}
                 placeholder={account?.address ?? 'Defaults to connected wallet'}
                 hint="Address that receives rent from the closed receipt account"
+            />
+            <FormField
+                label="Token Program"
+                value={tokenProgram}
+                onChange={setTokenProgram}
+                placeholder="Token program address"
+                hint="Use Token-2022 program address for Token-2022 mints"
             />
             <SendButton sending={withdraw.isPending} label={submitLabel} />
             <TxResult signature={withdraw.data?.signature} error={formError ?? withdraw.error} />

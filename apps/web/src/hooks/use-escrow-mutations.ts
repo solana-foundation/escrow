@@ -35,6 +35,7 @@ import { useProgramContext } from '@/contexts/ProgramContext';
 import type { RecentTransactionValues } from '@/contexts/RecentTransactionsContext';
 import { useRecentTransactions } from '@/contexts/RecentTransactionsContext';
 import { useWallet } from '@/contexts/WalletContext';
+import { normalizeTokenProgram } from '@/lib/token';
 import { formatTransactionError } from '@/lib/transactionErrors';
 import { invalidateWithDelay } from '@/lib/utils';
 
@@ -66,6 +67,7 @@ export interface DepositInput {
     readonly amount: bigint;
     readonly escrow: string;
     readonly mint: string;
+    readonly tokenProgram: string;
 }
 
 export interface WithdrawInput {
@@ -73,11 +75,13 @@ export interface WithdrawInput {
     readonly mint: string;
     readonly receipt: string;
     readonly rentRecipient?: string;
+    readonly tokenProgram: string;
 }
 
 export interface EscrowMintInput {
     readonly escrow: string;
     readonly mint: string;
+    readonly tokenProgram: string;
 }
 
 export interface BlockMintInput extends EscrowMintInput {
@@ -234,6 +238,7 @@ export function useEscrowMutations() {
             const programAddress = getProgramAddress(programId);
             const escrow = input.escrow.trim();
             const mint = input.mint.trim();
+            const tokenProgram = normalizeTokenProgram(input.tokenProgram);
             const receiptSeed = await generateKeyPairSigner();
             const [receipt] = await findReceiptPda(
                 {
@@ -253,6 +258,7 @@ export function useEscrowMutations() {
                     mint: asAddress(mint),
                     payer: txSigner,
                     receiptSeed,
+                    tokenProgram,
                 },
                 { programAddress },
             );
@@ -262,6 +268,7 @@ export function useEscrowMutations() {
                 escrow,
                 mint,
                 receipt,
+                tokenProgram: tokenProgram.toString(),
             });
             return { amount: input.amount, escrow, mint, receipt, receiptSeed: receiptSeed.address, signature };
         },
@@ -277,6 +284,7 @@ export function useEscrowMutations() {
             const mint = input.mint.trim();
             const receipt = input.receipt.trim();
             const rentRecipient = input.rentRecipient?.trim() || txSigner.address;
+            const tokenProgram = normalizeTokenProgram(input.tokenProgram);
             const [extensionsPda] = await findExtensionsPda({ escrow: asAddress(escrow) }, { programAddress });
             const extensionsAccount = await fetchEncodedAccount(rpc, extensionsPda);
             const remainingAccounts: (AccountMeta | AccountSignerMeta)[] = [];
@@ -299,6 +307,7 @@ export function useEscrowMutations() {
                     mint: asAddress(mint),
                     receipt: asAddress(receipt),
                     rentRecipient: asAddress(rentRecipient),
+                    tokenProgram,
                     withdrawer: txSigner,
                 },
                 { programAddress },
@@ -313,6 +322,7 @@ export function useEscrowMutations() {
                 mint,
                 receipt,
                 rentRecipient,
+                tokenProgram: tokenProgram.toString(),
             });
             return { signature };
         },
@@ -326,16 +336,22 @@ export function useEscrowMutations() {
             const programAddress = getProgramAddress(programId);
             const escrow = input.escrow.trim();
             const mint = input.mint.trim();
+            const tokenProgram = normalizeTokenProgram(input.tokenProgram);
             const instruction = await getAllowMintInstructionAsync(
                 {
                     admin: txSigner,
                     escrow: asAddress(escrow),
                     mint: asAddress(mint),
                     payer: txSigner,
+                    tokenProgram,
                 },
                 { programAddress },
             );
-            const signature = await sendEscrowTransaction([instruction], txSigner, 'Allow Mint', { escrow, mint });
+            const signature = await sendEscrowTransaction([instruction], txSigner, 'Allow Mint', {
+                escrow,
+                mint,
+                tokenProgram: tokenProgram.toString(),
+            });
             return { signature };
         },
         onError,
@@ -349,12 +365,14 @@ export function useEscrowMutations() {
             const escrow = input.escrow.trim();
             const mint = input.mint.trim();
             const rentRecipient = input.rentRecipient?.trim() || txSigner.address;
+            const tokenProgram = normalizeTokenProgram(input.tokenProgram);
             const instruction = await getBlockMintInstructionAsync(
                 {
                     admin: txSigner,
                     escrow: asAddress(escrow),
                     mint: asAddress(mint),
                     rentRecipient: asAddress(rentRecipient),
+                    tokenProgram,
                 },
                 { programAddress },
             );
@@ -362,6 +380,7 @@ export function useEscrowMutations() {
                 escrow,
                 mint,
                 rentRecipient,
+                tokenProgram: tokenProgram.toString(),
             });
             return { signature };
         },

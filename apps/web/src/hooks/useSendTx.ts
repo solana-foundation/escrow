@@ -73,7 +73,6 @@ export function useSendTx() {
 
                 await sendAndConfirm(signedTx, {
                     commitment: 'confirmed',
-                    skipPreflight: true,
                 });
                 addRecentTransaction({
                     action: options?.action ?? 'Transaction',

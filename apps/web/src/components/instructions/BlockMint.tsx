@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useSavedValues } from '@/contexts/SavedValuesContext';
 import { useWallet } from '@/contexts/WalletContext';
 import { useEscrowMutations } from '@/hooks/use-escrow-mutations';
+import { useTokenFormDefaults } from '@/hooks/use-token-form-defaults';
 import { TxResult } from '@/components/TxResult';
 import { firstValidationError, validateAddress, validateOptionalAddress } from '@/lib/validation';
 import { FormField, SendButton } from './shared';
@@ -29,7 +30,7 @@ export function BlockMint({
     const { blockMint } = useEscrowMutations();
     const { defaultEscrow, defaultMint, rememberEscrow, rememberMint } = useSavedValues();
     const [escrow, setEscrow] = useState(initialEscrow);
-    const [mint, setMint] = useState(initialMint);
+    const { clusterMint, mint, setMint, setTokenProgram, tokenProgram } = useTokenFormDefaults(initialMint);
     const [rentRecipient, setRentRecipient] = useState(initialRentRecipient);
     const [formError, setFormError] = useState<string | null>(null);
 
@@ -42,13 +43,14 @@ export function BlockMint({
             validateAddress(escrow, 'Escrow address'),
             validateAddress(mint, 'Mint address'),
             validateOptionalAddress(rentRecipient, 'Rent recipient'),
+            validateOptionalAddress(tokenProgram, 'Token program'),
         );
         if (validationError) {
             setFormError(validationError);
             return;
         }
 
-        const result = await blockMint.mutateAsync({ escrow, mint, rentRecipient }).catch(() => null);
+        const result = await blockMint.mutateAsync({ escrow, mint, rentRecipient, tokenProgram }).catch(() => null);
         if (!result) return;
 
         rememberEscrow(escrow);
@@ -78,7 +80,7 @@ export function BlockMint({
                         label="Mint Address"
                         value={mint}
                         onChange={setMint}
-                        autoFillValue={defaultMint}
+                        autoFillValue={defaultMint || clusterMint}
                         onAutoFill={setMint}
                         placeholder="SPL token mint to block"
                         required
@@ -91,6 +93,13 @@ export function BlockMint({
                 onChange={setRentRecipient}
                 placeholder={account?.address ?? 'Defaults to connected wallet'}
                 hint="Address that receives rent from the closed allowed-mint account"
+            />
+            <FormField
+                label="Token Program"
+                value={tokenProgram}
+                onChange={setTokenProgram}
+                placeholder="Token program address"
+                hint="Use Token-2022 program address for Token-2022 mints"
             />
             <SendButton sending={blockMint.isPending} label={submitLabel} />
             <TxResult signature={blockMint.data?.signature} error={formError ?? blockMint.error} />
