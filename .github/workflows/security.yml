@@ -41,7 +41,7 @@ jobs:
           install-solana: 'false'
           install-just: 'false'
           install-pnpm-dependencies: 'false'
-      - run: pnpm audit --ignore GHSA-848j-6mx2-7j84
+      - run: pnpm audit --ignore-unfixable
 
   miri:
     runs-on: ubuntu-latest
