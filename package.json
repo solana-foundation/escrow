@@ -63,11 +63,6 @@
             "picomatch@^4.0.0": "4.0.4",
             "socket.io-parser@^4.0.0": "4.2.6",
             "ws@^8.0.0": "8.20.1"
-        },
-        "auditConfig": {
-            "ignoreCves": [
-                "GHSA-848j-6mx2-7j84"
-            ]
         }
     }
 }
