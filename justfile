@@ -131,6 +131,9 @@ verify-mainnet: check-solana-verify
         --remote \
         -um
 
+verify-local: check-solana-verify
+    solana-verify build --library-name escrow_program
+
 # ******************************************************************************
 # Release
 # ******************************************************************************
