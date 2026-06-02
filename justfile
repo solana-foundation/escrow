@@ -125,7 +125,7 @@ check-solana-verify:
 # so the SBF build fails on getrandom under arm64 emulation without it.
 verify-mainnet: check-solana-verify
     solana-verify verify-from-repo \
-        https://github.com/solana-program/escrow \
+        https://github.com/solana-foundation/escrow \
         --program-id Escrowae7RaUfNn4oEZHywMXE5zWzYCXenwrCDaEoifg \
         --library-name escrow_program \
         --remote \

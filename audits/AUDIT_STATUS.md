@@ -7,7 +7,7 @@ Last updated: 2026-04-07
 - Auditor: Accretion
 - Report: `audits/2026-accretion-solana-foundation-escrow-audit-A26SFR3.pdf`
 - Audited-through commit: `36187ad52c7c03d11b13b6f1da9461f2f757cee2`
-- Compare unaudited delta: https://github.com/solana-program/escrow/compare/36187ad52c7c03d11b13b6f1da9461f2f757cee2...main
+- Compare unaudited delta: https://github.com/solana-foundation/escrow/compare/36187ad52c7c03d11b13b6f1da9461f2f757cee2...main
 
 Audit scope is commit-based. Commits after the audited-through SHA are considered unaudited until a new audit or mitigation review updates this file.
 
