@@ -5,7 +5,7 @@
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/solana-program/escrow.git",
+        "url": "git+https://github.com/solana-foundation/escrow.git",
         "directory": "clients/typescript"
     },
     "type": "module",
@@ -26,9 +26,9 @@
     "peerDependencies": {
         "@solana/kit": "^6.9.0"
     },
-    "homepage": "https://github.com/solana-program/escrow#readme",
+    "homepage": "https://github.com/solana-foundation/escrow#readme",
     "bugs": {
-        "url": "https://github.com/solana-program/escrow/issues"
+        "url": "https://github.com/solana-foundation/escrow/issues"
     },
     "keywords": [
         "solana",

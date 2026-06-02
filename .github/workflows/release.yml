@@ -24,7 +24,7 @@ concurrency:
 env:
   PROGRAM: escrow_program
   PROGRAM_ID: Escrowae7RaUfNn4oEZHywMXE5zWzYCXenwrCDaEoifg
-  REPO_URL: https://github.com/solana-program/escrow
+  REPO_URL: https://github.com/solana-foundation/escrow
 
 jobs:
   release:

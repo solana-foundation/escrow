@@ -144,4 +144,4 @@ Licensed under MIT. See [LICENSE](LICENSE) for details.
 ## Support
 
 - [**Solana StackExchange**](https://solana.stackexchange.com/) - tag `escrow-program`
-- [**Open an Issue**](https://github.com/solana-program/escrow/issues/new)
+- [**Open an Issue**](https://github.com/solana-foundation/escrow/issues/new)

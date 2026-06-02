@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "main": "index.js",
     "description": "Escrow Program",
-    "repository": "git@github.com:solana-program/escrow.git",
+    "repository": "git@github.com:solana-foundation/escrow.git",
     "license": "MIT",
     "scripts": {
         "build": "cd clients/typescript && tsc",
