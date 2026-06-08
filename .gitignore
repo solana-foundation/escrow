@@ -30,7 +30,7 @@
 .local/
 
 # CU tracking
-.cus/
+**/cu_report.md
 
 # Keyfiles
 .keypairs/

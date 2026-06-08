@@ -5,7 +5,7 @@ use solana_sdk::{
     transaction::TransactionError,
 };
 
-use crate::utils::TestContext;
+use crate::utils::{cu_tracker::record_cu, TestContext};
 
 /// Wrapper around an instruction and its required signers for testing
 pub struct TestInstruction {
@@ -21,14 +21,12 @@ impl TestInstruction {
     }
 
     /// Send this instruction expecting it to succeed, returning compute units consumed.
-    /// If CU tracking is enabled, writes to .cus/results.txt
+    /// Records the CU measurement when CU_REPORT is set.
     pub fn send_expect_success(self, ctx: &mut TestContext) -> u64 {
         let signer_refs: Vec<&Keypair> = self.signers.iter().collect();
         let cus = ctx.send_transaction(self.instruction, &signer_refs).expect("Transaction should succeed");
 
-        if let Some(tracker) = &mut ctx.cu_tracker {
-            tracker.write(self.name, cus);
-        }
+        record_cu(self.name, cus);
         cus
     }
 

@@ -9,19 +9,16 @@ use solana_sdk::{
     transaction::{Transaction, TransactionError},
 };
 
-use crate::utils::cu_utils::CuTracker;
 use escrow_program_client::ESCROW_PROGRAM_ID;
 
 pub const TEST_HOOK_ALLOW_ID: Pubkey = pubkey!("HookA11ow1111111111111111111111111111111111");
 pub const TEST_HOOK_DENY_ID: Pubkey = pubkey!("HookDeny11111111111111111111111111111111111");
 
 const MIN_LAMPORTS: u64 = 500_000_000;
-const CU_TRACKING_ENV_VAR: &str = "CU_TRACKING";
 
 pub struct TestContext {
     pub svm: LiteSVM,
     pub payer: Keypair,
-    pub cu_tracker: Option<CuTracker>,
 }
 
 impl TestContext {
@@ -50,9 +47,7 @@ impl TestContext {
         let payer = Keypair::new();
         svm.airdrop(&payer.pubkey(), MIN_LAMPORTS).unwrap();
 
-        let cu_tracker = if std::env::var(CU_TRACKING_ENV_VAR).is_ok() { CuTracker::new() } else { None };
-
-        Self { svm, payer, cu_tracker }
+        Self { svm, payer }
     }
 
     pub fn airdrop_if_required(&mut self, pubkey: &Pubkey, lamports: u64) -> Result<(), Box<dyn std::error::Error>> {

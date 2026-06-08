@@ -21,3 +21,5 @@ spl-associated-token-account = { version = "8.0.0", features = [
 solana-system-interface = "3.2.0"
 solana-address = "2.0.0"
 spl-token-2022 = { version = "11.0.0", features = ["no-entrypoint"] }
+tabled = "0.20"
+dtor = "1.0"
