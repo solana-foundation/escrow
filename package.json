@@ -16,7 +16,7 @@
         "typecheck": "cd clients/typescript && tsc --noEmit"
     },
     "devDependencies": {
-        "@codama/nodes-from-anchor": "^1.4.1",
+        "@codama/nodes-from-anchor": "^1.5.0",
         "@codama/renderers-js": "^2.2.0",
         "@codama/renderers-rust": "^3.1.0",
         "@eslint/js": "^9.39.4",
@@ -31,7 +31,7 @@
         "@types/eslint__js": "^9.14.0",
         "@types/jest": "^30.0.0",
         "@types/node": "^25.6.2",
-        "codama": "^1.6.0",
+        "codama": "^1.7.0",
         "eslint": "^9.39.2",
         "eslint-plugin-jest": "^29.15.2",
         "eslint-plugin-react-hooks": "^7.1.1",
