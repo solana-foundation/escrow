@@ -38,6 +38,6 @@
         "pinocchio"
     ],
     "dependencies": {
-        "@solana/program-client-core": "^6.4.0"
+        "@solana/program-client-core": "^6.10.0"
     }
 }
