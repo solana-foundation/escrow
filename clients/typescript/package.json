@@ -24,7 +24,7 @@
         "build": "tsc"
     },
     "peerDependencies": {
-        "@solana/kit": "^6.9.0"
+        "@solana/kit": "^6.10.0"
     },
     "homepage": "https://github.com/solana-foundation/escrow#readme",
     "bugs": {
