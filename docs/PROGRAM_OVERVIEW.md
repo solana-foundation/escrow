@@ -352,11 +352,12 @@ TLV-encoded extension data.
 **TLV Format (after header):**
 
 Each extension:
-| Size | Field |
-|------|-------|
-| 2 | type (u16) |
-| 2 | length (u16) |
-| n | data |
+
+| Size | Field        |
+| ---- | ------------ |
+| 2    | type (u16)   |
+| 2    | length (u16) |
+| n    | data         |
 
 ---
 
