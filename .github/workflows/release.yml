@@ -74,13 +74,13 @@ jobs:
         run: just generate-idl
 
       - name: Build verified program
-        uses: solana-foundation/github-actions/build-verified@f0ddc2234ac4ac19c5c17f520b60bc2d7308744f # v0.2.11
+        uses: solana-foundation/github-actions/build-verified@ab2b079d21b7798b4f3bce01b31dfdf1a68766e3 # v0.2.13
         with:
           program: ${{ env.PROGRAM }}
 
       - id: write-buffer
         name: Write program buffer
-        uses: solana-foundation/github-actions/write-program-buffer@f0ddc2234ac4ac19c5c17f520b60bc2d7308744f # v0.2.11
+        uses: solana-foundation/github-actions/write-program-buffer@ab2b079d21b7798b4f3bce01b31dfdf1a68766e3 # v0.2.13
         with:
           program: ${{ env.PROGRAM }}
           program-id: ${{ env.PROGRAM_ID }}
@@ -91,7 +91,7 @@ jobs:
 
       - if: inputs.network == 'devnet'
         name: Upgrade program (devnet)
-        uses: solana-foundation/github-actions/program-upgrade@f0ddc2234ac4ac19c5c17f520b60bc2d7308744f # v0.2.11
+        uses: solana-foundation/github-actions/program-upgrade@ab2b079d21b7798b4f3bce01b31dfdf1a68766e3 # v0.2.13
         with:
           program: ${{ env.PROGRAM }}
           program-id: ${{ env.PROGRAM_ID }}
@@ -101,7 +101,7 @@ jobs:
 
       - if: inputs.network == 'devnet'
         name: Upload IDL via program-metadata (devnet)
-        uses: solana-foundation/github-actions/metadata-upload@f0ddc2234ac4ac19c5c17f520b60bc2d7308744f # v0.2.11
+        uses: solana-foundation/github-actions/metadata-upload@ab2b079d21b7798b4f3bce01b31dfdf1a68766e3 # v0.2.13
         with:
           program-id: ${{ env.PROGRAM_ID }}
           rpc-url: ${{ env.RPC_URL }}
@@ -111,7 +111,7 @@ jobs:
 
       - if: inputs.network == 'devnet'
         name: Verify build (devnet)
-        uses: solana-foundation/github-actions/verify-build@f0ddc2234ac4ac19c5c17f520b60bc2d7308744f # v0.2.11
+        uses: solana-foundation/github-actions/verify-build@ab2b079d21b7798b4f3bce01b31dfdf1a68766e3 # v0.2.13
         with:
           program: ${{ env.PROGRAM }}
           program-id: ${{ env.PROGRAM_ID }}
@@ -125,7 +125,7 @@ jobs:
       - if: inputs.network == 'mainnet'
         id: metadata-buffer
         name: Write IDL metadata buffer (mainnet)
-        uses: solana-foundation/github-actions/write-metadata-buffer@f0ddc2234ac4ac19c5c17f520b60bc2d7308744f # v0.2.11
+        uses: solana-foundation/github-actions/write-metadata-buffer@ab2b079d21b7798b4f3bce01b31dfdf1a68766e3 # v0.2.13
         with:
           idl-path: idl/escrow_program.json
           rpc-url: ${{ env.RPC_URL }}
