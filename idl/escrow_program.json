@@ -2,6 +2,7 @@
   "additionalPrograms": [
     {
       "accounts": [],
+      "constants": [],
       "definedTypes": [],
       "errors": [],
       "events": [],
@@ -322,6 +323,7 @@
         }
       }
     ],
+    "constants": [],
     "definedTypes": [
       {
         "kind": "definedTypeNode",
@@ -3042,5 +3044,5 @@
     "version": "0.0.1"
   },
   "standard": "codama",
-  "version": "1.0.0"
+  "version": "1.6.0"
 }
