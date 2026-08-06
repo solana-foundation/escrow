@@ -400,6 +400,133 @@ pub enum EscrowProgramInstruction {
     ))]
     SetImmutable {} = 12,
 
+    /// Configure two-party settlement (beneficiary + dispute program) on an escrow.
+    #[codama(account(name = "payer", docs = "Pays for extensions account creation", signer, writable))]
+    #[codama(account(name = "admin", docs = "Admin authority for the escrow", signer))]
+    #[codama(account(name = "escrow", docs = "Escrow account to configure settlement on"))]
+    #[codama(account(
+        name = "extensions",
+        docs = "Extensions PDA account to store settlement config",
+        writable,
+        default_value = pda("extensions", [seed("escrow", account("escrow"))])
+    ))]
+    #[codama(account(name = "system_program", docs = "System program", default_value = program("system")))]
+    #[codama(account(
+        name = "event_authority",
+        docs = "Event authority PDA for CPI event emission",
+        default_value = public_key("Eq63FWYo9DXgwoTnpK9gjp7BH4PyhSPo11zEF9FK7f4M")
+    ))]
+    #[codama(account(
+        name = "escrow_program",
+        docs = "Escrow program for CPI event emission",
+        default_value = public_key("Escrowae7RaUfNn4oEZHywMXE5zWzYCXenwrCDaEoifg")
+    ))]
+    SetSettlement {
+        /// Bump for extensions PDA
+        #[codama(default_value = account_bump("extensions"))]
+        extensions_bump: u8,
+        /// Seller / payout target
+        beneficiary: Address,
+        /// Trusted owner of any verdict PDA
+        dispute_program: Address,
+        /// Verdict byte meaning "pay seller" (must be != 255)
+        release_value: u8,
+    } = 13,
+
+    /// Async cooperative approval; releases funds to the beneficiary on the second approval.
+    #[codama(account(name = "approver", docs = "Depositor (buyer) or beneficiary (seller)", signer))]
+    #[codama(account(name = "rent_recipient", docs = "Receives rent from closed receipt on release", writable))]
+    #[codama(account(name = "escrow", docs = "Escrow PDA (signer for vault transfer)"))]
+    #[codama(account(
+        name = "extensions",
+        docs = "Extensions PDA holding settlement config",
+        writable,
+        default_value = pda("extensions", [seed("escrow", account("escrow"))])
+    ))]
+    #[codama(account(name = "receipt", docs = "Deposit receipt (closed on release)", writable))]
+    #[codama(account(
+        name = "vault",
+        docs = "Escrow vault token account (source on release)",
+        writable,
+        default_value = pda("associatedToken", program = "associatedToken", [seed("owner", account("escrow")), seed("tokenProgram", account("tokenProgram")), seed("mint", account("mint"))])
+    ))]
+    #[codama(account(name = "beneficiary_token_account", docs = "Beneficiary ATA (destination on release)", writable))]
+    #[codama(account(name = "mint", docs = "Token mint"))]
+    #[codama(account(name = "token_program", docs = "SPL Token program", default_value = program("token")))]
+    #[codama(account(name = "system_program", docs = "System program", default_value = program("system")))]
+    #[codama(account(
+        name = "event_authority",
+        docs = "Event authority PDA for CPI event emission",
+        default_value = public_key("Eq63FWYo9DXgwoTnpK9gjp7BH4PyhSPo11zEF9FK7f4M")
+    ))]
+    #[codama(account(
+        name = "escrow_program",
+        docs = "Escrow program for CPI event emission",
+        default_value = public_key("Escrowae7RaUfNn4oEZHywMXE5zWzYCXenwrCDaEoifg")
+    ))]
+    Approve {} = 14,
+
+    /// Lock the escrow into dispute mode; only a verdict may move funds afterwards.
+    #[codama(account(name = "disputer", docs = "Depositor (buyer) or beneficiary (seller)", signer))]
+    #[codama(account(name = "escrow", docs = "Escrow PDA"))]
+    #[codama(account(
+        name = "extensions",
+        docs = "Extensions PDA to store the verdict pin and disputed flag",
+        writable,
+        default_value = pda("extensions", [seed("escrow", account("escrow"))])
+    ))]
+    #[codama(account(name = "receipt", docs = "Deposit receipt identifying the depositor"))]
+    #[codama(account(name = "dispute_pda", docs = "Verdict account supplied by the disputer; must be owned by the configured dispute program"))]
+    #[codama(account(name = "system_program", docs = "System program", default_value = program("system")))]
+    #[codama(account(
+        name = "event_authority",
+        docs = "Event authority PDA for CPI event emission",
+        default_value = public_key("Eq63FWYo9DXgwoTnpK9gjp7BH4PyhSPo11zEF9FK7f4M")
+    ))]
+    #[codama(account(
+        name = "escrow_program",
+        docs = "Escrow program for CPI event emission",
+        default_value = public_key("Escrowae7RaUfNn4oEZHywMXE5zWzYCXenwrCDaEoifg")
+    ))]
+    RaiseDispute {
+        /// Byte offset of the verdict within the dispute PDA
+        offset: u16,
+    } = 15,
+
+    /// Permissionless: read the dispute verdict and pay out to the winner, then close the receipt.
+    #[codama(account(name = "relayer", docs = "Fee payer; anyone may submit", signer))]
+    #[codama(account(name = "rent_recipient", docs = "Receives rent from closed receipt", writable))]
+    #[codama(account(name = "escrow", docs = "Escrow PDA (signer for vault transfer)"))]
+    #[codama(account(
+        name = "extensions",
+        docs = "Extensions PDA holding settlement config",
+        default_value = pda("extensions", [seed("escrow", account("escrow"))])
+    ))]
+    #[codama(account(name = "receipt", docs = "Deposit receipt (closed on payout)", writable))]
+    #[codama(account(
+        name = "vault",
+        docs = "Escrow vault token account (source)",
+        writable,
+        default_value = pda("associatedToken", program = "associatedToken", [seed("owner", account("escrow")), seed("tokenProgram", account("tokenProgram")), seed("mint", account("mint"))])
+    ))]
+    #[codama(account(name = "depositor_token_account", docs = "Depositor ATA (destination if buyer wins)", writable))]
+    #[codama(account(name = "beneficiary_token_account", docs = "Beneficiary ATA (destination if seller wins)", writable))]
+    #[codama(account(name = "dispute_pda", docs = "Verdict account; must equal the pinned address and owner"))]
+    #[codama(account(name = "mint", docs = "Token mint"))]
+    #[codama(account(name = "token_program", docs = "SPL Token program", default_value = program("token")))]
+    #[codama(account(name = "system_program", docs = "System program", default_value = program("system")))]
+    #[codama(account(
+        name = "event_authority",
+        docs = "Event authority PDA for CPI event emission",
+        default_value = public_key("Eq63FWYo9DXgwoTnpK9gjp7BH4PyhSPo11zEF9FK7f4M")
+    ))]
+    #[codama(account(
+        name = "escrow_program",
+        docs = "Escrow program for CPI event emission",
+        default_value = public_key("Escrowae7RaUfNn4oEZHywMXE5zWzYCXenwrCDaEoifg")
+    ))]
+    Resolve {} = 16,
+
     /// Invoked via CPI to emit event data in instruction args (prevents log truncation).
     #[codama(skip)]
     #[codama(account(

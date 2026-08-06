@@ -72,6 +72,33 @@ pub enum EscrowProgramError {
     /// (16) Escrow is immutable and cannot be modified
     #[error("Escrow is immutable and cannot be modified")]
     EscrowImmutable,
+    /// (17) Escrow is disputed; cooperative/refund paths are frozen
+    #[error("Escrow is disputed; only a verdict may move funds")]
+    EscrowDisputed,
+    /// (18) Dispute verdict is pending (byte == 255)
+    #[error("Dispute verdict is still pending")]
+    DisputePending,
+    /// (19) A dispute is already raised (operation only valid pre-dispute)
+    #[error("A dispute has already been raised")]
+    AlreadyDisputed,
+    /// (20) No dispute has been raised (Resolve only valid post-dispute)
+    #[error("No dispute has been raised")]
+    NotDisputed,
+    /// (21) Dispute PDA is not owned by the configured dispute program
+    #[error("Dispute PDA owner does not match the configured dispute program")]
+    InvalidDisputePda,
+    /// (22) Verdict offset is outside the dispute PDA data bounds
+    #[error("Verdict offset is out of bounds")]
+    VerdictOutOfBounds,
+    /// (23) No Settlement extension is configured for this escrow
+    #[error("No settlement is configured for this escrow")]
+    SettlementNotConfigured,
+    /// (24) Approver is neither the depositor nor the beneficiary
+    #[error("Approver is neither the depositor nor the beneficiary")]
+    InvalidApprover,
+    /// (25) Configured release_value is reserved (must be != 255)
+    #[error("release_value must not equal the pending sentinel (255)")]
+    InvalidReleaseValue,
 }
 
 impl From<EscrowProgramError> for ProgramError {

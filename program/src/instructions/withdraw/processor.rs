@@ -2,11 +2,12 @@ use pinocchio::{account::AccountView, error::ProgramError, Address, ProgramResul
 use pinocchio_token_2022::instructions::TransferChecked;
 
 use crate::{
+    errors::EscrowProgramError,
     events::WithdrawEvent,
     instructions::Withdraw,
     state::{
         get_extensions_from_account, validate_extensions_pda, ArbiterData, Escrow, ExtensionType, HookData, HookPoint,
-        Receipt, TimelockData,
+        Receipt, SettlementData, TimelockData,
     },
     traits::{AccountDeserialize, EventSerialize, ExtensionData},
     utils::{close_pda_account, emit_event, get_mint_decimals},
@@ -46,13 +47,20 @@ pub fn process_withdraw(program_id: &Address, accounts: &[AccountView], instruct
     // Get timelock, hook, and arbiter extensions in single pass
     let exts = get_extensions_from_account(
         ix.accounts.extensions,
-        &[ExtensionType::Timelock, ExtensionType::Hook, ExtensionType::Arbiter],
+        &[ExtensionType::Timelock, ExtensionType::Hook, ExtensionType::Arbiter, ExtensionType::Settlement],
     )?;
 
     // Validate timelock if present
     if let Some(ref timelock_bytes) = exts[0] {
         let timelock = TimelockData::from_bytes(timelock_bytes)?;
         timelock.validate(deposited_at)?;
+    }
+
+    // Block buyer refund while a dispute is open — only Resolve may move funds.
+    if let Some(settlement_bytes) = &exts[3] {
+        if SettlementData::from_bytes(settlement_bytes)?.disputed {
+            return Err(EscrowProgramError::EscrowDisputed.into());
+        }
     }
 
     // Parse hook if present

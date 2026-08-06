@@ -16,6 +16,7 @@ pub enum ExtensionType {
     Hook = 1,
     BlockedTokenExtensions = 2,
     Arbiter = 3,
+    Settlement = 4,
 }
 
 impl TryFrom<u16> for ExtensionType {
@@ -27,6 +28,7 @@ impl TryFrom<u16> for ExtensionType {
             1 => Ok(Self::Hook),
             2 => Ok(Self::BlockedTokenExtensions),
             3 => Ok(Self::Arbiter),
+            4 => Ok(Self::Settlement),
             _ => Err(ProgramError::InvalidAccountData),
         }
     }

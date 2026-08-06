@@ -16,6 +16,10 @@ pub enum EscrowInstructionDiscriminators {
     RemoveExtension = 10,
     UnblockTokenExtension = 11,
     SetImmutable = 12,
+    SetSettlement = 13,
+    Approve = 14,
+    RaiseDispute = 15,
+    Resolve = 16,
     EmitEvent = 228,
 }
 
@@ -37,6 +41,10 @@ impl TryFrom<u8> for EscrowInstructionDiscriminators {
             10 => Ok(Self::RemoveExtension),
             11 => Ok(Self::UnblockTokenExtension),
             12 => Ok(Self::SetImmutable),
+            13 => Ok(Self::SetSettlement),
+            14 => Ok(Self::Approve),
+            15 => Ok(Self::RaiseDispute),
+            16 => Ok(Self::Resolve),
             228 => Ok(Self::EmitEvent),
             _ => Err(ProgramError::InvalidInstructionData),
         }
@@ -174,8 +182,36 @@ mod tests {
     }
 
     #[test]
-    fn test_discriminator_try_from_invalid() {
+    fn test_discriminator_try_from_set_settlement() {
         let result = EscrowInstructionDiscriminators::try_from(13u8);
+        assert!(result.is_ok());
+        assert!(matches!(result.unwrap(), EscrowInstructionDiscriminators::SetSettlement));
+    }
+
+    #[test]
+    fn test_discriminator_try_from_approve() {
+        let result = EscrowInstructionDiscriminators::try_from(14u8);
+        assert!(result.is_ok());
+        assert!(matches!(result.unwrap(), EscrowInstructionDiscriminators::Approve));
+    }
+
+    #[test]
+    fn test_discriminator_try_from_raise_dispute() {
+        let result = EscrowInstructionDiscriminators::try_from(15u8);
+        assert!(result.is_ok());
+        assert!(matches!(result.unwrap(), EscrowInstructionDiscriminators::RaiseDispute));
+    }
+
+    #[test]
+    fn test_discriminator_try_from_resolve() {
+        let result = EscrowInstructionDiscriminators::try_from(16u8);
+        assert!(result.is_ok());
+        assert!(matches!(result.unwrap(), EscrowInstructionDiscriminators::Resolve));
+    }
+
+    #[test]
+    fn test_discriminator_try_from_invalid() {
+        let result = EscrowInstructionDiscriminators::try_from(17u8);
         assert!(matches!(result, Err(ProgramError::InvalidInstructionData)));
 
         let result = EscrowInstructionDiscriminators::try_from(255u8);
