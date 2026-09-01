@@ -13,6 +13,10 @@
 | 6   | AllowMint           | `6`           | Allow a mint for deposits                       |
 | 7   | BlockMint           | `7`           | Block a previously allowed mint                 |
 | 8   | BlockTokenExtension | `8`           | Block Token-2022 extension types                |
+| 13  | SetSettlement       | `13`          | Configure two-party settlement (beneficiary + dispute program) |
+| 14  | Approve             | `14`          | Async cooperative approval; releases on 2nd approval           |
+| 15  | RaiseDispute        | `15`          | Lock escrow; only a verdict may move funds                     |
+| 16  | Resolve             | `16`          | Read dispute verdict; pay winner, close receipt                |
 | 228 | EmitEvent           | `228`         | Internal CPI for event emission                 |
 
 ---
@@ -419,6 +423,32 @@ During `AllowMint`, the program checks if the mint has any blocked Token-2022 ex
 
 ---
 
+### Settlement (type = 4)
+
+Two-party settlement: a `beneficiary` (seller) who can be paid cooperatively or via a dispute-program verdict.
+
+**Data (102 bytes):**
+
+| Offset | Size | Field           | Type   |
+| ------ | ---- | --------------- | ------ |
+| 0      | 32   | beneficiary     | Pubkey |
+| 32     | 32   | dispute_program | Pubkey |
+| 64     | 1    | release_value   | u8     |
+| 65     | 1    | buyer_approved  | bool   |
+| 66     | 1    | seller_approved | bool   |
+| 67     | 1    | disputed        | bool   |
+| 68     | 32   | dispute_pda     | Pubkey |
+| 100    | 2    | offset          | u16    |
+
+**Resolution modes:**
+- **Cooperative** (`Approve`): depositor + beneficiary each sign off; the second approval releases funds to the beneficiary.
+- **Disputed** (`RaiseDispute` → `Resolve`): either party locks the escrow; only a verdict byte read from `dispute_pda` (owned by `dispute_program`) may move funds.
+
+**Verdict tri-state** (byte at `dispute_pda.data[offset]`): `== release_value` → pay seller · `== 255` → `DisputePending` · else → refund buyer.
+
+**Notes:** `release_value` must be `!= 255`. `dispute_pda`+`offset` are supplied by the disputer at `RaiseDispute`; the escrow checks `dispute_pda.owner() == dispute_program` (no CPI). Binding the verdict PDA to this escrow is the dispute program's responsibility. Once `disputed`, `Withdraw` is blocked. See `docs/DISPUTS.md` for the full design.
+
+
 ## Error Codes
 
 | Code | Name                         | Description                                  |
@@ -437,6 +467,18 @@ During `AllowMint`, the program checks if the mint has any blocked Token-2022 ex
 | 11   | PausableNotAllowed           | Mint has Pausable extension                  |
 | 12   | TokenExtensionAlreadyBlocked | Token extension already blocked              |
 | 13   | ZeroDepositAmount            | Zero deposit amount                          |
+| 14   | InvalidArbiter               | Arbiter signer is missing or does not match  |
+| 15   | TokenExtensionNotBlocked     | Token extension is not currently blocked     |
+| 16   | EscrowImmutable              | Escrow is immutable and cannot be modified   |
+| 17   | EscrowDisputed               | Escrow is disputed; only a verdict may move  |
+| 18   | DisputePending               | Dispute verdict is still pending             |
+| 19   | AlreadyDisputed              | A dispute has already been raised            |
+| 20   | NotDisputed                  | No dispute has been raised                   |
+| 21   | InvalidDisputePda            | Dispute PDA owner does not match             |
+| 22   | VerdictOutOfBounds           | Verdict offset out of bounds                 |
+| 23   | SettlementNotConfigured      | No settlement configured for this escrow     |
+| 24   | InvalidApprover              | Approver is neither depositor nor beneficiary|
+| 25   | InvalidReleaseValue          | release_value must not equal 255             |
 
 ---
 

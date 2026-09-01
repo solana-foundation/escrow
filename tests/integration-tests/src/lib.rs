@@ -27,3 +27,7 @@ mod test_unblock_token_extension;
 mod test_update_admin;
 #[cfg(test)]
 mod test_withdraw;
+#[cfg(test)]
+mod test_set_settlement;
+#[cfg(test)]
+mod test_settlement_flows;

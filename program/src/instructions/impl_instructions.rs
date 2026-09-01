@@ -15,6 +15,12 @@ use super::extensions::{
 use super::set_immutable::{SetImmutableAccounts, SetImmutableData};
 use super::update_admin::{UpdateAdminAccounts, UpdateAdminData};
 use super::withdraw::{WithdrawAccounts, WithdrawData};
+use super::settlement::{
+    approve::{ApproveAccounts, ApproveData},
+    raise_dispute::{RaiseDisputeAccounts, RaiseDisputeData},
+    resolve::{ResolveAccounts, ResolveData},
+    set_settlement::{SetSettlementAccounts, SetSettlementData},
+};
 
 define_instruction!(AllowMint, AllowMintAccounts, AllowMintData);
 define_instruction!(BlockMint, BlockMintAccounts, BlockMintData);
@@ -29,3 +35,7 @@ define_instruction!(UnblockTokenExtension, UnblockTokenExtensionAccounts, Unbloc
 define_instruction!(SetImmutable, SetImmutableAccounts, SetImmutableData);
 define_instruction!(UpdateAdmin, UpdateAdminAccounts, UpdateAdminData);
 define_instruction!(Withdraw, WithdrawAccounts, WithdrawData);
+define_instruction!(SetSettlement, SetSettlementAccounts, SetSettlementData);
+define_instruction!(Approve, ApproveAccounts, ApproveData);
+define_instruction!(RaiseDispute, RaiseDisputeAccounts, RaiseDisputeData);
+define_instruction!(Resolve, ResolveAccounts, ResolveData);

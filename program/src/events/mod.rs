@@ -5,6 +5,7 @@ pub mod create_escrow;
 pub mod deposit;
 pub mod extensions;
 pub mod set_immutable;
+pub mod settlement;
 pub mod shared;
 pub mod withdraw;
 
@@ -15,5 +16,6 @@ pub use create_escrow::*;
 pub use deposit::*;
 pub use extensions::*;
 pub use set_immutable::*;
+pub use settlement::*;
 pub use shared::*;
 pub use withdraw::*;
