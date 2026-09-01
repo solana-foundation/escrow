@@ -16,7 +16,7 @@
         "typecheck": "cd clients/typescript && tsc --noEmit"
     },
     "devDependencies": {
-        "@codama/nodes-from-anchor": "^1.5.3",
+        "@codama/nodes-from-anchor": "^1.5.5",
         "@codama/renderers-js": "^2.3.1",
         "@codama/renderers-rust": "^3.1.3",
         "@eslint/js": "^9.39.5",
@@ -43,7 +43,7 @@
         "prettier": "^3.9.6",
         "ts-jest": "^29.4.12",
         "ts-node": "^10.9.2",
-        "tsx": "^4.23.11",
+        "tsx": "^4.23.12",
         "typescript": "^5.9.3",
         "typescript-eslint": "^8.62.0"
     },
