@@ -6,7 +6,7 @@ use crate::{require_len, traits::InstructionData};
 ///
 /// # Layout
 /// * `extensions_bump` (u8) - Bump for extensions PDA
-/// * `hook_program` (Address) - Hook program address (system_program = disabled)
+/// * `hook_program` (Address) - Hook program address (use RemoveExtension to disable)
 pub struct SetHookData {
     pub extensions_bump: u8,
     pub hook_program: Address,
@@ -19,7 +19,12 @@ impl<'a> TryFrom<&'a [u8]> for SetHookData {
     fn try_from(data: &'a [u8]) -> Result<Self, Self::Error> {
         require_len!(data, Self::LEN);
 
-        Ok(Self { extensions_bump: data[0], hook_program: Address::new_from_array(data[1..33].try_into().unwrap()) })
+        let hook_program = Address::new_from_array(data[1..33].try_into().unwrap());
+        if hook_program == Address::default() {
+            return Err(ProgramError::InvalidArgument);
+        }
+
+        Ok(Self { extensions_bump: data[0], hook_program })
     }
 }
 
@@ -42,6 +47,15 @@ mod tests {
         let parsed = result.unwrap();
         assert_eq!(parsed.extensions_bump, 255);
         assert_eq!(parsed.hook_program, Address::new_from_array([1u8; 32]));
+    }
+
+    #[test]
+    fn test_set_hook_data_rejects_zero_hook_program() {
+        let mut data = [0u8; 33];
+        data[0] = 1;
+
+        let result = SetHookData::try_from(&data[..]);
+        assert!(matches!(result, Err(ProgramError::InvalidArgument)));
     }
 
     #[test]

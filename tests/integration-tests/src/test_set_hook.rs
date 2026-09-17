@@ -165,7 +165,7 @@ fn test_set_hook_success() {
 }
 
 #[test]
-fn test_set_hook_hook_program_zero_address() {
+fn test_set_hook_rejects_zero_hook_program() {
     let mut ctx = TestContext::new();
 
     let escrow_ix = CreateEscrowFixture::build_valid(&mut ctx);
@@ -176,7 +176,6 @@ fn test_set_hook_hook_program_zero_address() {
     let (escrow_pda, _) = find_escrow_pda(&escrow_seed);
     let (extensions_pda, extensions_bump) = find_extensions_pda(&escrow_pda);
 
-    // Set hook to system program (zero address = disabled)
     let hook_program = Pubkey::default();
     let instruction = SetHookBuilder::new()
         .payer(ctx.payer.pubkey())
@@ -189,11 +188,12 @@ fn test_set_hook_hook_program_zero_address() {
 
     let test_ix = crate::utils::TestInstruction { instruction, signers: vec![admin], name: "SetHook" };
 
-    // Setting hook to zero address should succeed (disables hook)
-    test_ix.send_expect_success(&mut ctx);
+    // A hook is always invoked once configured, so the zero address would brick
+    // deposit and withdraw. RemoveExtension is the only disable path.
+    let error = test_ix.send_expect_error(&mut ctx);
+    assert_instruction_error(error, InstructionError::InvalidArgument);
 
-    assert_extensions_header(&ctx, &extensions_pda, extensions_bump, 1);
-    assert_hook_extension(&ctx, &extensions_pda, &hook_program);
+    assert!(ctx.get_account(&extensions_pda).is_none(), "Extensions account should not be created");
 }
 
 // ============================================================================
