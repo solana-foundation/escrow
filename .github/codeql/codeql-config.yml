@@ -1,0 +1,5 @@
+name: escrow-codeql
+
+paths-ignore:
+  - tests
+  - examples
