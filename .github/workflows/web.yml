@@ -10,6 +10,9 @@ on:
       - '.nvmrc'
       - '.github/workflows/web.yml'
 
+permissions:
+  contents: read
+
 jobs:
   web-build:
     runs-on: ubuntu-latest
