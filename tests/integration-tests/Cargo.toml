@@ -7,13 +7,13 @@ edition = { workspace = true }
 workspace = true
 
 [dependencies]
-litesvm = "^0.12.0"
+litesvm = "^0.18.1"
 escrow-program-client = { package = "escrow", path = "../../clients/rust", features = [
     "fetch",
 ], default-features = false }
-solana-sdk = "3.0.0"
+solana-sdk = "4.0.1"
 solana-program = "4.0.0"
-solana-account = "~3.4"
+solana-account = "4.7"
 spl-token-interface = "3.0.0"
 spl-associated-token-account = { version = "8.0.0", features = [
     "no-entrypoint",

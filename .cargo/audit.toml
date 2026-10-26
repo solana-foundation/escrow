@@ -1,0 +1,8 @@
+[advisories]
+# zstd 0.13 comes from solana-account-decoder, used only by the client's `fetch` feature.
+# Every stable Solana release up to 4.3.2 still pins zstd ^0.13.3; remove once one moves to zstd 0.14.
+ignore = [
+    "RUSTSEC-2026-0391",
+    "RUSTSEC-2026-0398",
+    "RUSTSEC-2026-0403",
+]
