@@ -24,7 +24,7 @@ overrides:
   shell-quote@^1.0.0: 1.12.0
   source-map-js@^1.0.0: 1.2.2
   image-size@^1.0.0: 2.0.3
-  stream-json@^1.0.0: 3.5.0
+  stream-json@^1.0.0: 3.7.0
   uuid@^8.0.0: 11.1.1
 
 importers:
@@ -5302,9 +5302,8 @@ packages:
   stream-chain@4.2.6:
     resolution: {integrity: sha512-1zeJ8CrtJfmiba26ui8jXkq/xLRFvhzkdH02D5QLO9Cnovgeb28IJxg88DdraWnjnkbOol/++uIAybJbJhk7ig==}
 
-  stream-json@3.5.0:
-    resolution: {integrity: sha512-dobB7zipGW8o11PvdRljQSWuyMxifADLvoHeA4elwNWOTbZo6+BlNa+P6aCq7Y9jRiWTy2Ucu2xSv0Y2/T+/kQ==}
-    engines: {node: '>=22'}
+  stream-json@3.7.0:
+    resolution: {integrity: sha512-rCSBdcBP/bPk6T8QFcxAj1MSzAuc5i49cYW6IE7sYObNEPccBJIUiL6fU9c9BWt40aJK0siVynLX7lWaW8alXw==}
 
   string-length@4.0.2:
     resolution: {integrity: sha512-+l6rNN5fYHNhZZy41RXsYptCjA2Igmq4EG7kZAYFQI1E1VTXarr6ZPXBg6eq7Y6eK4FEhY6AJlyuFIb/v/S0VQ==}
@@ -9960,7 +9959,7 @@ snapshots:
       eyes: 0.1.8
       isomorphic-ws: 4.0.1(ws@7.5.13(bufferutil@4.1.0)(utf-8-validate@6.0.6))
       json-stringify-safe: 5.0.1
-      stream-json: 3.5.0
+      stream-json: 3.7.0
       uuid: 11.1.1
       ws: 7.5.13(bufferutil@4.1.0)(utf-8-validate@6.0.6)
     transitivePeerDependencies:
@@ -11313,7 +11312,7 @@ snapshots:
 
   stream-chain@4.2.6: {}
 
-  stream-json@3.5.0:
+  stream-json@3.7.0:
     dependencies:
       stream-chain: 4.2.6
 

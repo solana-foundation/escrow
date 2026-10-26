@@ -9,6 +9,8 @@ allowBuilds:
   unrs-resolver: true
   utf-8-validate: false
 
+auditConfig: {}
+
 overrides:
   diff: '>=4.0.4'
   ajv@^6.0.0: 6.14.0
@@ -29,5 +31,5 @@ overrides:
   shell-quote@^1.0.0: 1.12.0
   source-map-js@^1.0.0: 1.2.2
   image-size@^1.0.0: 2.0.3
-  stream-json@^1.0.0: 3.5.0
+  stream-json@^1.0.0: 3.7.0
   uuid@^8.0.0: 11.1.1
