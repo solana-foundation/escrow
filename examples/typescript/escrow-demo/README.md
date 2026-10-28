@@ -60,17 +60,21 @@ We have created a few helper functions/files to make the demo easier to follow:
 Connect to localhost validator and generate keypairs:
 
 ```typescript
-import { createDefaultLocalhostRpcClient } from '@solana/kit-plugins';
-import { generateKeyPairSigner } from '@solana/kit';
+import { createClient, generateKeyPairSigner, lamports } from '@solana/kit';
+import { localhostRpc, rpcAirdrop } from '@solana/kit-plugin-rpc';
+import { generatedPayerWithSol } from '@solana/kit-plugin-signer';
 
-const { rpc, rpcSubscriptions, payer } = await createDefaultLocalhostRpcClient();
+const { rpc, rpcSubscriptions, payer } = await createClient()
+    .use(localhostRpc())
+    .use(rpcAirdrop())
+    .use(generatedPayerWithSol(lamports(100_000_000_000n)));
 const admin = await generateKeyPairSigner();
 const escrowSeed = await generateKeyPairSigner();
 const receiptSeed = await generateKeyPairSigner();
 const mintKeypair = await generateKeyPairSigner();
 ```
 
-Note that we are using the `createDefaultLocalhostRpcClient` [plugin](https://github.com/anza-xyz/kit-plugins) to create an RPC client with the default localhost settings. The plugin also airdrops SOL to a `payer` signer for us.
+Note that we are using [Kit plugins](https://github.com/anza-xyz/kit-plugins) to create an RPC client with the default localhost settings and to airdrop SOL to a generated `payer` signer.
 
 ### Step 2: Create Escrow
 
