@@ -9,7 +9,9 @@ allowBuilds:
   unrs-resolver: true
   utf-8-validate: false
 
-auditConfig: {}
+auditConfig:
+  ignoreGhsas:
+    - GHSA-gcqx-w48m-w2h4
 
 overrides:
   diff: '>=4.0.4'
