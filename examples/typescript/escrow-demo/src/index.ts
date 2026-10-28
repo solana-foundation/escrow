@@ -25,8 +25,9 @@ import {
     getDepositInstructionAsync,
     getWithdrawInstructionAsync,
 } from '@solana/escrow';
-import { generateKeyPairSigner, isSolanaError } from '@solana/kit';
-import { createDefaultLocalhostRpcClient } from '@solana/kit-plugins';
+import { createClient, generateKeyPairSigner, isSolanaError, lamports } from '@solana/kit';
+import { localhostRpc, rpcAirdrop } from '@solana/kit-plugin-rpc';
+import { generatedPayerWithSol } from '@solana/kit-plugin-signer';
 import {
     findAssociatedTokenPda,
     getCreateAssociatedTokenIdempotentInstructionAsync,
@@ -47,7 +48,10 @@ logTitle('ESCROW PROGRAM DEMO');
 // ============================================================
 logStep(1, 'Setup & Connect');
 
-const { rpc, rpcSubscriptions, payer } = await createDefaultLocalhostRpcClient();
+const { rpc, rpcSubscriptions, payer } = await createClient()
+    .use(localhostRpc())
+    .use(rpcAirdrop())
+    .use(generatedPayerWithSol(lamports(100_000_000_000n)));
 
 // Generate keypairs
 const admin = await generateKeyPairSigner();

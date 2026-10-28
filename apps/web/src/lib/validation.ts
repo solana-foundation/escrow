@@ -1,6 +1,6 @@
 'use client';
 
-import { PublicKey } from '@solana/web3.js';
+import { isAddress } from '@solana/kit';
 
 function normalize(value: string) {
     return value.trim();
@@ -9,12 +9,7 @@ function normalize(value: string) {
 export function validateAddress(value: string, label: string): string | null {
     const normalized = normalize(value);
     if (!normalized) return `${label} is required.`;
-    try {
-        void new PublicKey(normalized);
-        return null;
-    } catch {
-        return `${label} is not a valid Solana address.`;
-    }
+    return isAddress(normalized) ? null : `${label} is not a valid Solana address.`;
 }
 
 export function validateOptionalAddress(value: string, label: string): string | null {
