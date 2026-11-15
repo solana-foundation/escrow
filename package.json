@@ -23,7 +23,7 @@
         "@jest/globals": "^30.4.1",
         "@solana-program/system": "^0.16.0",
         "@solana-program/token": "^0.18.0",
-        "@solana-program/token-2022": "^0.20.0",
+        "@solana-program/token-2022": "^0.20.1",
         "@solana/eslint-config-solana": "6.0.1",
         "@solana/kit": "^8.5.0",
         "@solana/prettier-config-solana": "^0.0.7",
