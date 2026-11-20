@@ -12,7 +12,7 @@ export function appendAccountVersion(escrowCodama: Codama): Codama {
                     assertIsNode(node, 'accountNode');
 
                     if (isNode(node.data, 'structTypeNode')) {
-                        const fields = node.data.fields;
+                        const fields = node.data.fields ?? [];
                         const discriminatorIndex = fields.findIndex(f => f.name === 'discriminator');
 
                         const versionField = structFieldTypeNode({
