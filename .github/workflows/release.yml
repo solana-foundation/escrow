@@ -61,12 +61,6 @@ jobs:
           install -m 600 /dev/null /tmp/deployer.json
           printf '%s' "$DEPLOYER_KEYPAIR" > /tmp/deployer.json
 
-      - name: Derive deployer pubkey
-        id: deployer
-        run: |
-          PUBKEY=$(solana-keygen pubkey /tmp/deployer.json)
-          echo "pubkey=$PUBKEY" >> "$GITHUB_OUTPUT"
-
       - name: Configure Solana CLI
         run: solana config set --url "$RPC_URL" --keypair "$HOME/.config/solana/id.json"
 
@@ -78,65 +72,25 @@ jobs:
         with:
           program: ${{ env.PROGRAM }}
 
-      - id: write-buffer
-        name: Write program buffer
-        uses: solana-foundation/github-actions/write-program-buffer@e6ed2eb93c55eca911dbc711fb08683b42926a28 # v0.2.15
+      - id: prepare-squads-release
+        name: Prepare Squads release buffers
+        uses: solana-foundation/github-actions/prepare-squads-release@2b04254422a18611022132ac9c0857b797fd994f
         with:
           program: ${{ env.PROGRAM }}
           program-id: ${{ env.PROGRAM_ID }}
           rpc-url: ${{ env.RPC_URL }}
           keypair: ${{ env.DEPLOYER_KEYPAIR }}
-          buffer-authority-address: ${{ inputs.network == 'mainnet' && env.SQUADS_VAULT || steps.deployer.outputs.pubkey }}
+          squads-vault: ${{ env.SQUADS_VAULT }}
+          metadata-path: idl/escrow_program.json
           priority-fee: ${{ inputs.priority-fee }}
-
-      - if: inputs.network == 'devnet'
-        name: Upgrade program (devnet)
-        uses: solana-foundation/github-actions/program-upgrade@e6ed2eb93c55eca911dbc711fb08683b42926a28 # v0.2.15
-        with:
-          program: ${{ env.PROGRAM }}
-          program-id: ${{ env.PROGRAM_ID }}
-          buffer: ${{ steps.write-buffer.outputs.buffer }}
-          rpc-url: ${{ env.RPC_URL }}
-          keypair: ${{ env.DEPLOYER_KEYPAIR }}
-
-      - if: inputs.network == 'devnet'
-        name: Upload IDL via program-metadata (devnet)
-        uses: solana-foundation/github-actions/metadata-upload@e6ed2eb93c55eca911dbc711fb08683b42926a28 # v0.2.15
-        with:
-          program-id: ${{ env.PROGRAM_ID }}
-          rpc-url: ${{ env.RPC_URL }}
-          keypair: ${{ env.DEPLOYER_KEYPAIR }}
-          idl-path: idl/escrow_program.json
-          priority-fees: ${{ inputs.priority-fee }}
-
-      - if: inputs.network == 'devnet'
-        name: Verify build (devnet)
-        uses: solana-foundation/github-actions/verify-build@e6ed2eb93c55eca911dbc711fb08683b42926a28 # v0.2.15
-        with:
-          program: ${{ env.PROGRAM }}
-          program-id: ${{ env.PROGRAM_ID }}
-          rpc-url: ${{ env.RPC_URL }}
-          keypair: ${{ env.DEPLOYER_KEYPAIR }}
+          export-verify-pda: 'true'
           repo-url: ${{ env.REPO_URL }}
-          network: devnet
           commit-hash: ${{ github.sha }}
-          skip-build: 'false'
+          network: ${{ inputs.network }}
 
-      - if: inputs.network == 'mainnet'
-        id: metadata-buffer
-        name: Write IDL metadata buffer (mainnet)
-        uses: solana-foundation/github-actions/write-metadata-buffer@e6ed2eb93c55eca911dbc711fb08683b42926a28 # v0.2.15
-        with:
-          idl-path: idl/escrow_program.json
-          rpc-url: ${{ env.RPC_URL }}
-          keypair: ${{ env.DEPLOYER_KEYPAIR }}
-          buffer-authority: ${{ env.SQUADS_VAULT }}
-          priority-fees: ${{ inputs.priority-fee }}
-
-      - if: inputs.network == 'mainnet'
-        name: Confirm mainnet buffer handoff
+      - name: Confirm Squads buffer handoff
         run: |
-          : "${SQUADS_VAULT:?Set SQUADS_VAULT in Doppler prd_github}"
+          : "${SQUADS_VAULT:?Set SQUADS_VAULT in Doppler}"
           echo "Program buffer authority assigned to Squads vault: $SQUADS_VAULT"
           echo "IDL metadata buffer authority assigned to Squads vault: $SQUADS_VAULT"
 
@@ -150,10 +104,9 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- Program: \`${{ env.PROGRAM_ID }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- Commit: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Buffer: \`${{ steps.write-buffer.outputs.buffer }}\`" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ inputs.network }}" = "mainnet" ]; then
-            echo "- IDL buffer: \`${{ steps.metadata-buffer.outputs.buffer }}\`" >> $GITHUB_STEP_SUMMARY
-            echo "- Buffer authority: \`${{ env.SQUADS_VAULT }}\`" >> $GITHUB_STEP_SUMMARY
-            echo "- **Action required**: create the Squads upgrade proposal using the listed buffers" >> $GITHUB_STEP_SUMMARY
-            echo "- CI keypair role: fee payer and buffer writer only; it does not need Squads membership" >> $GITHUB_STEP_SUMMARY
-          fi
+          echo "- Buffer: \`${{ steps['prepare-squads-release'].outputs.buffer }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- IDL buffer: \`${{ steps['prepare-squads-release'].outputs['metadata-buffer'] }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Verify PDA transaction: \`${{ steps['prepare-squads-release'].outputs['pda-tx'] }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Buffer authority: \`${{ env.SQUADS_VAULT }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Action required**: create the Squads upgrade proposal using the listed buffers" >> $GITHUB_STEP_SUMMARY
+          echo "- CI keypair role: fee payer and buffer writer only; it does not need Squads membership" >> $GITHUB_STEP_SUMMARY
